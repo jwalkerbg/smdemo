@@ -1,5 +1,5 @@
 # .gitattributes
-*.c    ident  "-d %ad -n %an"
-*.cpp  ident  "-d %ad -n %an"
-*.h    ident  "-d %ad -n %an"
-*.hpp  ident  "-d %ad -n %an"
+*.c    ident  -d %ad -n %an
+*.cpp  ident  -d %ad -n %an
+*.h    ident  -d %ad -n %an
+*.hpp  ident  -d %ad -n %an

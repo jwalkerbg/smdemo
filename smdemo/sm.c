@@ -1,4 +1,4 @@
-// $Id: sm.c 1078 2018-11-15 18:53:11Z imc $
+// $Id$
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -306,22 +306,6 @@ int SM_GetStateCount (SM_MACHINE* this)
 {
     return (this != NULL) ? this->sizes : SM_INVALID;
 }
-
-#if defined(TEST)
-
-// SM_STATE* SM_GetStateArray_helper (SM_MACHINE* this)
-// Parameters:
-//   SM_MACHINE* this - pointer to state machine
-// Return:
-//   pointer to states array
-// Description: SM_GetStateArray returns a pointer to the array with state struct's.
-
-const SM_STATE* SM_GetStateArray_helper (SM_MACHINE* this)
-{
-    return this->states;
-}
-
-#endif  // defined(TEST)
 
 // void SM_SetContext (SM_MACHINE* this, void* ctx)
 // Parameters:

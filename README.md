@@ -6,7 +6,9 @@ The machine is implemented as a single C function that performs a transition bet
 
 State machine function does not loop. On each call it performs a transition and exits. This means that the applications that use SM must create main loop.
 
-While SM is written in C, it is created object oriented as much as posiible. Most of the functions receive as first parameter a pointer to a structure, that represents the state machine. If one needs, he would convert this code in C++ easily.
+Nevertheless SM is written in C, it is created object oriented as much as posiible. Most of the functions receive as first parameter a pointer to a structure, that represents the state machine. If one needs, he would convert this code in C++ easily.
+
+Stste machine helps seprate the logic from actions. It makes clear separation between input, logic and output. This is essential for creating stable and extendable applications without lossing the full picture.
 
 # Formal definition.
 
@@ -69,6 +71,7 @@ struct sm_state {
     SM_ACTION entry_action;     // action on entering state, may be NULL
     SM_ACTION exit_action;      // action on exiting state, may be NULL
 };
+typedef struct sm_state SM_STATE;
 ```
 The comments explain what the members are. Transitions are explained below. Here some words about actions. The type ```SM_ACTION``` is defined as follows:
 
@@ -77,3 +80,57 @@ typedef void (*SM_ACTION)(SM_MACHINE* this);
 ```
 
 This is a pointer to a C function returning nothing and accepting a pointer to the state machine object. ```entry_action``` is executed when FSM is entering a state nevertheless which was previous state. Par example this state may contain code to light the lamps in the room. It is not important where was FSM before. The lamps must be lightened on entering the room. Similarly, exit_action may have code to turn off the lights on exitting the room, and it is not important where (in which state) FSM will go.
+
+## Transitions
+
+Transitions do two things - change the FSM state and produce output by calling an action. In contrst fo states and events, transitions do not have ```enum``` types. They are represented by type ```SM_TRANSITION``` and are stored in arrays pointed to by ```const SM_TRANSITION* tr``` from ```SM_STATE``` objects. Here is the type of transitions:
+
+```
+struct sm_transition {
+    EVENT_TYPE event;       // trigger event
+    STATE_TYPE s2;          // destination state (index in an array)
+    SM_ACTION a;            // action (can be NULL: null action)
+    int ai;                 // action index
+    SM_GUARD guard;         // guard: true: transition is permitted, false: transition is forbidden;
+                            // (can be NULL, then transition is permitted
+    bool gpol;              // guard polarity: SM_GPOL_POSITIVE or SM_GPOL_NEGATIVE
+};
+typedef struct sm_transition SM_TRANSITION;
+```
+
+Meanung of the fields
+
+- event = this is triggering event. When incoming event is equal to this value, the transition becomes a candidate fo execution.
+- s2 - the new state. The value is one of the values in the above ```enum```, containing state names. Please remember that this ```enum``` is defined by the application programmer.
+- a - this is a pointer tu a function (action) that will be executed if the transition is selected for execution
+- ai - action index. It has supplemental role. It is not used by the FSM, however serves as index in arrays with action names that can be used in FSM tracers. More about this in the sections of FSM tracing.
+- guard - this a pointer to a function that return ```true``` or ```false```. Returning ```true```  means that the guard permits the execution of the transition, and ```false``` means that it does not permit the transition.
+- gpol - this is a flag that may or may not negate the result if the guard. gpol may have values of ```SM_GPOL_POSITIVE`` or ```
+
+The fnal result of the guard is result of this expression: ```guard() ^ gpol```. ```SM_GPOL_POSITIVE``` leaves the gaurdc result as is. ```SM_GPOL_NEGATIVE``` turns ```true``` to ```false``` and ```false``` to ```true```. This possibility is usedto embed non-determinism: Two transitions may be defined with the same triggering event, but with different polarities.
+
+## State machine object
+
+The state amchine has a single object describing it, and it has to be in RAM, not in NVM. It is initializwed in runtime so as to point to states array. Here is its type definition 
+
+```
+struct sm_machine {
+    STATE_TYPE s1;              // current state fo state machine (index)
+    int id;                     // state machine identifier (must be unique in the system)
+    int flags;                  // internal flags see masks for .flags above
+    EVENT_TYPE ev;              // active event been handled
+    const SM_STATE* states;     // array of states, s1 is index for it
+    int sizes;                  // number of states in states[]
+    void* ctx;                  // pointer to struct containing context information for SM
+                                // can be NULL
+#if defined(SM_TRACER)
+    SM_TRANSITION_TRACER trm;   // pointer to tracer of the state machine
+    SM_CONTEXT_TRACER trc;      // pointer to context tracer
+    SM_LOSTEVENT_TRACER trle;   // tracer of of lost events
+#endif  // defined(SM_TRACER)
+};
+typedef struct sm_machine SM_MACHINE;
+```
+
+The comments in the struture describe the fields. 
+

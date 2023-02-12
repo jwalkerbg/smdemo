@@ -54,55 +54,55 @@ bool permitting_guard(SM_MACHINE* this)
 
 void P1_F1_entry_action(SM_MACHINE* this)
 {
-    printf("\tP1_F1_entry_action executed\n");
+    printf("  P1_F1_entry_action executed\n");
     P1_F1_entry_action_executed = true;
 }
 
 void P1_F1_exit_action(SM_MACHINE* this)
 {
-    printf("\tP1_F1_exit_action executed\n");
+    printf("  P1_F1_exit_action executed\n");
     P1_F1_exit_action_executed = true;
 }
 
 void P1a0(SM_MACHINE* this)
 {
-    printf("\tiP1a0 executed\n");
+    printf("  P1a0 action executed\n");
     Action = iP1a0;
 }
 
 void P1a1(SM_MACHINE* this)
 {
-    printf("\tiP1a1 executed\n");
+    printf("  P1a1 action executed\n");
     Action = iP1a1;
 }
 
 void P1a2(SM_MACHINE* this)
 {
-    printf("\tiP1a2 executed\n");
+    printf("  P1a2 action executed\n");
     Action = iP1a2;
 }
 
 void P1a3(SM_MACHINE* this)
 {
-    printf("\tiP1a3 executed\n");
+    printf("  P1a3 action executed\n");
     Action = iP1a3;
 }
 
 void P1a4(SM_MACHINE* this)
 {
-    printf("\tiP1a4 executed\n");
+    printf("  P1a4 action executed\n");
     Action = iP1a4;
 }
 
 void P1a5(SM_MACHINE* this)
 {
-    printf("\tiP1a5 executed\n");
+    printf("  P1a5 action executed\n");
     Action = iP1a5;
 }
 
 void P1a6(SM_MACHINE* this)
 {
-    printf("\tiP1a6 executed\n");
+    printf("  P1a6 action executed\n");
     Action = iP1a6;
 }
 

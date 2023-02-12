@@ -1,3 +1,5 @@
+// $Id$
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -29,7 +31,7 @@ enum test_actions {
     undefined_action
 };
 
-enum test_actions Action;
+//enum test_actions Action;
 
 bool P1_F1_entry_action_executed;
 bool P1_F1_exit_action_executed;
@@ -67,43 +69,36 @@ void P1_F1_exit_action(SM_MACHINE* this)
 void P1a0(SM_MACHINE* this)
 {
     printf("  P1a0 action executed\n");
-    Action = iP1a0;
 }
 
 void P1a1(SM_MACHINE* this)
 {
     printf("  P1a1 action executed\n");
-    Action = iP1a1;
 }
 
 void P1a2(SM_MACHINE* this)
 {
     printf("  P1a2 action executed\n");
-    Action = iP1a2;
 }
 
 void P1a3(SM_MACHINE* this)
 {
     printf("  P1a3 action executed\n");
-    Action = iP1a3;
 }
 
 void P1a4(SM_MACHINE* this)
 {
     printf("  P1a4 action executed\n");
-    Action = iP1a4;
 }
 
 void P1a5(SM_MACHINE* this)
 {
     printf("  P1a5 action executed\n");
-    Action = iP1a5;
 }
 
 void P1a6(SM_MACHINE* this)
 {
     printf("  P1a6 action executed\n");
-    Action = iP1a6;
 }
 
 const SM_TRANSITION sP1_START_transitions [] = {
@@ -179,6 +174,10 @@ const char* const sP1_states_names[] = {
     "sP1_START", "sP1_RESOLVE", "sP1_F1", "sP1_F2", "sP1_F3", "sP1_F4"
 };
 
+const char* Actions_names[] = {
+  "P1a0", "P1a1", "P1a2", "P1a3", "P1a4", "P1a5", "P1a6"
+};
+
 // Trace order:
 
 // 1. SM_TraceContext(sm,true)  -- information before exitting s1
@@ -204,7 +203,14 @@ const char* const sP1_states_names[] = {
 
 void SM_TraceMachine (SM_MACHINE* this, const SM_TRANSITION* tr)
 {
-    printf("ID=%04d, S1=%s, S2=%s, Event=%s, Action=%d %spermitted\n",this->id,sP1_states_names[this->s1],sP1_states_names[tr->s2],fake_events_list_names[tr->event],Action,(this->flags & SM_TREN) == 0 ? "not " : "");
+    const char* aname;
+    if (tr->ai < Actions_number) {
+      aname = Actions_names[tr->ai];
+    }
+    else {
+      aname = "unknown";
+    }
+    printf("ID=%04d, S1=%s, S2=%s, Event=%s, Action=%s %spermitted\n",this->id,sP1_states_names[this->s1],sP1_states_names[tr->s2],fake_events_list_names[tr->event],aname,(this->flags & SM_TREN) == 0 ? "not " : "");
     SM_TraceMachineExecuted = true;
 
     if ((this->flags & SM_TREN) == 0u) {

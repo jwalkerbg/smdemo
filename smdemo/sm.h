@@ -66,7 +66,7 @@ struct sm_machine {
     STATE_TYPE s1;              // current state fo state machine (index)
     int id;                     // state machine identifier (must be unique in the system)
     int flags;                  // internal flags see masks for .flags above
-    EVENT_TYPE ev;              // active event been handled
+    EVENT_TYPE ev;              // incoming event been handled
     const SM_STATE* states;     // array of states, s1 is index for it
     int sizes;                  // number of states in states[]
     void* ctx;                  // pointer to struct containing context information for SM

@@ -1,20 +1,37 @@
 # State Machine
 
-SM is an implementation of a event driven finite state machine in C language.
+SM is an implementation of a event driven finite state machine written in C language.
 
-The machine is implemented as a single C function that performs a transition between states (if found suitable one and permitted). States and transitions are stored in tables, so the state machine functions uses these tables to select transitions.
+The state machine is implemented as a single C function that performs a transition between states (if found suitable one and permitted). States and transitions are stored in tables, so the state machine function uses these tables to select transition for execution. Besides this function additional supplemental functions are provided to initialize and maintain the state machine.
 
-State machine function does not loop. On each call it performs a transition and exits. This means that the applications that use SM must create main loop.
+State machine function does not loop. On each call, it receives an event, performs a transition and exits. This means that the applications that use SM must create a loop in which the state machine function will be called. This is conventient that it allows different main loops to be created suitable for different applicatios.
 
 Nevertheless SM is written in C, it is created object oriented as much as posiible. Most of the functions receive as first parameter a pointer to a structure, that represents the state machine. If one needs, he would convert this code in C++ easily.
 
-Stste machine helps seprate the logic from actions. It makes clear separation between input, logic and output. This is essential for creating stable and extendable applications without lossing the full picture.
+State machine helps separate the logic from actions. It makes clear separation between input, logic and output. This is essential for creating stable and extendable applications without lossing the full picture.
 
 # Formal definition.
 
-State machine (Finite state machine - FSM) is an abstract machine that has associated with it finite number of states. It can be in exactly one of the states at any given time. The FSM change from one state to another in responce of some input. The set of inputs which this FSM reacts is set of abstract events. Every change from one to another state is a transition. Is is allowed cuurent state and next stte to be thesam state. On transitions, the state machine may produce output. The output of this FSM are actions. On each transition the FSM performs actions.
+## Definition
 
-Transitions have guards. Guards are logical functions that permit or not permit transitions to be executed. Guards add nondeterministic character ot the FSM. Without them the machine is fully deterministic.
+State machine (Finite state machine - FSM) is an abstract machine that
+
+- has finite number of states and it can be in exactly one of these states at any given state. One of these states is start state.
+- has finite number of input events that the machine reacts
+- has finite number of transtions between the states.
+- has finite number of output actions that the machine executes on transitions
+- each state may be assigned an entry action and an exit action
+- each transition may be assigned a logical guard function
+
+The work of FSM is to perform transitions step by step. The FSM, depending on the current state S1 and the current input event ev, executes a transtion to new state S2 and executes an output action. The transition is executed if it has not guard or the if the guard permits the transition. On permitted trnasition, following happens:
+
+- if the current state has an exit action, it is executed if the new state differ from the current state.
+- if the transition has defined an action it is executed
+- If the new state has an entry action it is executed if the new state differ from the current state.
+
+## Guards
+
+Guards that are assigned to transitions are pairs of logical function and polarity. A guard permits a tranistion when its logical result xor'ed with the polarity gives result ```true```. One logical function may be part of two or more transitions with different polarities. This fact may be used to create some non-determinism in the state machine.
 
 # Implementation
 
@@ -24,7 +41,7 @@ Events are reprsented as values of type ```EVENT_TYPE```. It is defined as an ``
 
 ```
 enum events_list {
-	evNullEvent,
+    evNullEvent,
 // TO DO: insert application events here
 
     evEventsNumber	
@@ -32,13 +49,13 @@ enum events_list {
 typedef enum events_list EVENT_TYPE;
 ```
 
-Events are just values in ```EVENT_TYPE```.The first event, ```evNullEvent``` is a special no-event value (when there is no new event in the input). It has value of zero. All other event which are application specific must be inserted after ```evNullEvent```. The last element is ```evEventsNumber``` which represents the number of items in the application that the FSM can accept.
+Events are just values in ```EVENT_TYPE```. The first event, ```evNullEvent``` is a special no-event value (when there is no new event in the input). It has value of zero. All other event which are application specific and must be inserted after ```evNullEvent```. The last element is ```evEventsNumber``` which represents the number of items in the application that the FSM can accept.
 
-The names of application specific event must b prfixed with ```ev``` prefix to avoid coflicts with values of other enums that may be defined in the application.
+The names of application specific events must be prefixed with ```ev``` prefix to avoid conflicts with values of other enums that may be defined in the application.
 
-Events in the type cannot have gaps. This means that ```evSomeEvent = 10``` is not allowed. The events cannot produce equal integer values.
+Events in the type cannot have gaps. This means that ```evSomeEvent = 10``` is not allowed. Several events cannot produce equal integer values.
 
-The names of the event shall represent its semantic. Example: ```evDoorOpened```, ```evDoorClosed``` witch may originate from some door sensor. ```evMeasurementsReady``` may originate from an low level algorithm that measures analog levels of some analog (ADC) inputs. Events usually represent changes of states of some sub-systems in the application. Taking above name ```evDoorOpened``` means that the door has been closed (initial state) and it is opened now (the new state). The event tells that it was opened somehow - by a person, by the wind and so on.
+The names of the events shall represent its semantic. Example: ```evDoorOpened```, ```evDoorClosed``` which may originate from some door sensor. ```evMeasurementsReady``` may originate from an low level algorithm that measures analog levels of some analog (ADC) inputs. Events usually represent changes of states of some sub-systems in the application. Taking above name ```evDoorOpened```, it means that the door has been closed (initial state) and it is opened now (the new state). The event tells that it was opened somehow - by a person, by the wind and so on.
 
 ## States
 
@@ -56,11 +73,11 @@ Here, the naming is as follows:
 
 - ```s``` - indicates state
 - ```P1``` - is the name of the state machine - par example it implements the behaviour of an application process / task / thread, named ```P1```.
-- ```START```, ```RESOLVE``` rtc are the names of the states. These are selected / created by the application programmer. Values in these enums serve as index in the array of states, associated with the state machine (see below).
+- ```START```, ```RESOLVE``` etc are the names of the states. These are selected / created by the application programmer. Values in these enums serve as index in the array of states, associated with the state machine (see below).
 
-Note that it is good idea the last item in an enum tobe a special key which is repersent the total number of states.
+Note that it is good idea the last item in an enum to be a special key which repersents the total number of states.
 
-Each state may be assigned an entry and an exit action. These actions are functions, that are called on executing a transition between the states. What they will do is up to the application programmer.The states have set (array) of transitions whch will be executed on arriving correspondent event. A state may have not transitions. This means that FSM will not react to any event. It looks like the state machine has dead.
+Each state may be assigned an entry and an exit action. These actions are functions with signature ```SM_ACTION```, that are called on executing a transition between the states. What they will do is up to the application programmer.The states have set (array) of transitions which will be executed on arriving correspondent events. A state may have not transitions. This means that FSM will not react to any event. It looks like the state machine has dead.
 
 Each state have a structure of data. Here it is:
 
@@ -83,7 +100,7 @@ This is a pointer to a C function returning nothing and accepting a pointer to t
 
 ## Transitions
 
-Transitions do two things - change the FSM state and produce output by calling an action. In contrst fo states and events, transitions do not have ```enum``` types. They are represented by type ```SM_TRANSITION``` and are stored in arrays pointed to by ```const SM_TRANSITION* tr``` from ```SM_STATE``` objects. Here is the type of transitions:
+Transitions do two things - change the FSM state and produce output by executing an action. In contrst fo states and events, transitions do not have ```enum``` types. They are represented by type ```SM_TRANSITION``` and are stored in arrays pointed to by ```const SM_TRANSITION* tr``` from ```SM_STATE``` objects. Here is the type of transitions:
 
 ```
 struct sm_transition {
@@ -98,27 +115,27 @@ struct sm_transition {
 typedef struct sm_transition SM_TRANSITION;
 ```
 
-Meanung of the fields
+Meaning of the fields
 
 - event = this is triggering event. When incoming event is equal to this value, the transition becomes a candidate fo execution.
 - s2 - the new state. The value is one of the values in the above ```enum```, containing state names. Please remember that this ```enum``` is defined by the application programmer.
 - a - this is a pointer tu a function (action) that will be executed if the transition is selected for execution
 - ai - action index. It has supplemental role. It is not used by the FSM, however serves as index in arrays with action names that can be used in FSM tracers. More about this in the sections of FSM tracing.
 - guard - this a pointer to a function that return ```true``` or ```false```. Returning ```true```  means that the guard permits the execution of the transition, and ```false``` means that it does not permit the transition.
-- gpol - this is a flag that may or may not negate the result if the guard. gpol may have values of ```SM_GPOL_POSITIVE`` or ```
+- gpol - this is a flag that may or may not negate the result if the guard. gpol may have values of ```SM_GPOL_POSITIVE`` or ```SM_GPOL_NEGATIVE```.
 
-The fnal result of the guard is result of this expression: ```guard() ^ gpol```. ```SM_GPOL_POSITIVE``` leaves the gaurdc result as is. ```SM_GPOL_NEGATIVE``` turns ```true``` to ```false``` and ```false``` to ```true```. This possibility is usedto embed non-determinism: Two transitions may be defined with the same triggering event, but with different polarities.
+The final result of the guard is result of this expression: ```guard() ^ gpol```. ```SM_GPOL_POSITIVE``` leaves the gaurd result as is. ```SM_GPOL_NEGATIVE``` turns ```true``` to ```false``` and ```false``` to ```true```. This possibility is used to embed non-determinism: Two transitions may be defined with the same triggering event, but with different polarities.
 
 ## State machine object
 
-The state amchine has a single object describing it, and it has to be in RAM, not in NVM. It is initializwed in runtime so as to point to states array. Here is its type definition 
+The state machine has a single object describing it, and it has to be in RAM, not in NVM. It is initialized in runtime so as to point to states array. Here is its type definition:
 
 ```
 struct sm_machine {
     STATE_TYPE s1;              // current state fo state machine (index)
     int id;                     // state machine identifier (must be unique in the system)
     int flags;                  // internal flags see masks for .flags above
-    EVENT_TYPE ev;              // active event been handled
+    EVENT_TYPE ev;              // incoming event been handled
     const SM_STATE* states;     // array of states, s1 is index for it
     int sizes;                  // number of states in states[]
     void* ctx;                  // pointer to struct containing context information for SM
@@ -132,5 +149,14 @@ struct sm_machine {
 typedef struct sm_machine SM_MACHINE;
 ```
 
-The comments in the struture describe the fields. 
+The comments in the structure describe the fields.
 
+## Context
+
+The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contxts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* this``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type. 
+
+# Trace
+
+## Trace stte machine
+
+## Trace context

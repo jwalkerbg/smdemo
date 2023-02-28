@@ -143,7 +143,7 @@ struct sm_machine {
 #if defined(SM_TRACER)
     SM_TRANSITION_TRACER trm;   // pointer to tracer of the state machine
     SM_CONTEXT_TRACER trc;      // pointer to context tracer
-    SM_LOSTEVENT_TRACER trle;   // tracer of of lost events
+    SM_LOSTEVENT_TRACER trle;   // pointer to tracer of of lost events
 #endif  // defined(SM_TRACER)
 };
 typedef struct sm_machine SM_MACHINE;
@@ -153,10 +153,37 @@ The comments in the structure describe the fields.
 
 ## Context
 
-The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contxts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* this``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type. 
+The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contexts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* this``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type. 
 
 # Trace
 
-## Trace stte machine
+FSM has embedded tracing capabilities. There are three trace functions that (1) are pointed to by poiners in ```SM_MACHINE``` object and (2) they are supplied by the application program. Tracers are provided in this demo project and can be used to develop appropriate tracers in real applications. The tracers are pointed by 
+
+Trace capabilities are compiled if ```SM_TRACER``` preprocessor constant is defined. Without it, no trace functions are compiled however the production code may become smaller and faster. If tracing is compiled, it can be enabled or disabled (default option) in runtime event in the actions of the state machine.
+
+FSM must be given pointers to the tracers befor tracing to take effect. This is performed by ```SM_SetTracers()``` function.
+
+## Trace state machine
+
+State machine tracer produces output about FSM transitions. It is of type ```SM_TRANSITION_TRACER```. It receives two parameters - ```SM_MACHINE* this``` and a pointer to the current transition being executed. The tracer is executed after the current state is exited, transition actrion is executed and before the new state is entered. See the demo project for a sample of transition tracer. Example output of such tracer could be:
+
+```
+ID=0001, S1=sP1_F4, S2=sP1_F2, Event=evBTN3Released, Action=P1a3 permitted
+ID=0001, S1=sP1_RESOLVE, S2=sP1_F1, Event=evP1Trigger1, Action=P1a1 not permitted
+```
+
+where
+ - ID is the ```id``` of the state machine
+ - S1 is the current state (being exited)
+ - S2 is the new state (being entered)
+ - Event is the event that has triggered the transition
+ - Action is the action being performed in the transition
+ - "permited" or "not pewrmitted" marks tell whether the action has been permitted to be executed or not.
+ 
+As it can be seen, this ouput gives information how FSM logic works at its level of abstraction.
 
 ## Trace context
+
+It is normally to be traced the context - the application data and how it has been changed. This tracing is what contyext tracer does. FSM module normally does not know much of the application data. Even, it does not know anything. So the context tracer is to be created by the application programmer. The context tracers receive as arguments a pointer to the state machine and a flag which says when it is called: Context tracers are called twice in one transition - before transition execution and after transition execution. ```this->ctx``` is a void pointer. It is up to the tracer (and its creator) to cast this void pointer to something meaningful and to retrieve data. 
+
+## Trace lost events

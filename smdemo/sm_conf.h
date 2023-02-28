@@ -1,4 +1,4 @@
-// $Id: sm_conf.h 1081 2018-11-15 19:57:15Z imc $
+// $Id$
 
 #if !defined(sm_conf_h_defined)
 #define sm_conf_h_defined

@@ -178,12 +178,19 @@ where
  - S2 is the new state (being entered)
  - Event is the event that has triggered the transition
  - Action is the action being performed in the transition
- - "permited" or "not pewrmitted" marks tell whether the action has been permitted to be executed or not.
+ - "permitted" or "not permitted" marks tell whether the action has been permitted to be executed or not.
  
 As it can be seen, this ouput gives information how FSM logic works at its level of abstraction.
 
 ## Trace context
 
-It is normally to be traced the context - the application data and how it has been changed. This tracing is what contyext tracer does. FSM module normally does not know much of the application data. Even, it does not know anything. So the context tracer is to be created by the application programmer. The context tracers receive as arguments a pointer to the state machine and a flag which says when it is called: Context tracers are called twice in one transition - before transition execution and after transition execution. ```this->ctx``` is a void pointer. It is up to the tracer (and its creator) to cast this void pointer to something meaningful and to retrieve data. 
+It is normally to be traced the context - the application data and how it has been changed. This tracing is what context tracer does. FSM module normally does not know much of the application data. Even, it does not know anything. So the context tracer is to be created by the application programmer. The context tracers receive as arguments a pointer to the state machine and a flag which says when it is called: Context tracers are called twice in one transition - before transition execution and after transition execution. Thorough ```this``` pointer, the void pointer ```this->ctx``` gives access to context data, connected to the FSM instance. It is up to the tracer (and its creator) to cast this void pointer to something meaningful and to retrieve data. Remember that that FSM actions receive ```this`` pointer and via ```this->ctx``` can manipulate context data.
 
 ## Trace lost events
+
+Lost events are these events that do not trigger any transition in the current state of FSM. It is normal to have lost events because an instance of FSM in given state reacts to a subset of all possible events. While this is normal behavior in production, tracing of lost event may be useful in development phase of a project. Lost events may show when FSM does not react to events while it has to.
+
+Tracers of lost events are to be left to application programmers. They receive a pointer ```this```. ```this->ev``` is the event being traced.
+
+It may be useful to trace not all lost events but events of interest only.
+

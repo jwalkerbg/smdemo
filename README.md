@@ -201,6 +201,153 @@ Tracers of lost events are to be left to application programmers. They receive a
 
 It may be useful to trace not all lost events but events of interest only.
 
-## Functions
+# Implementation. Functions.
 
+All functions receive a pointer to FSM object of type ```SM_MACHINE* this```. This makes FSM module object oriented.
 
+## SM_Machine
+
+```
+void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev);
+```
+
+## SM_Initialize
+
+```
+void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
+```
+
+```SM_Initialize``` initialises FSM object. It must be the first function that is executed with FSM.
+
+Parameters:
+- ```this``` - pointer to FSM object
+- ```s1``` - initial state of FSM
+- ```id``` - FSM identifier
+- ```states``` - pointer to an array of states
+- ```sizes``` - size of the arrays of the states (the numbr of states)
+- ```ctx``` - pointer to FSM context, may be ```NULL```.
+
+## SM_GetID
+
+```
+int SM_GetID (SM_MACHINE* this);
+```
+
+```SM_GetID``` return FSM ```id``` property. This can be used par example by tracers.
+
+## SM_GetCurrentState
+
+```
+STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
+```
+
+```SM_GetCurrentState``` return the current state of FSM. This function may be used when the current state must be known (in actions). Normally the actions should not be interested of which is current state. The need for knowing the current state may indicate bad FSM design.
+
+## SM_SetCurrentState
+
+```
+bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
+```
+
+```SM_SetCurrentState``` sets current state of FSM. This function is normaly not used. FSM must follow its transitions to change its states. However non-standard implementations may use it to change the state. This function is not recommended to be used.
+
+## SM_GetStateCount
+
+```
+int SM_GetStateCount (SM_MACHINE* this);
+```
+
+```SM_GetStateCount``` returns the number of the states of FSM.
+
+## SM_SetContext
+
+```
+void SM_SetContext (SM_MACHINE* this, void* ctx);
+```
+
+```SM_SetContext``` sets the context of FSM. ```ctx``` becomes value of ```this->ctx```. ```ctx``` may be ```NULL```.
+
+## SM_GetContext
+
+```
+void* SM_GetContext (SM_MACHINE* this);
+```
+
+```SM_GetContext``` returns a pointer to the context of FSM. This is the value of ```this->ctx```.
+
+## SM_Start
+
+```
+void SM_Start (SM_MACHINE* this, STATE_TYPE s1);
+```
+
+```SM_Start``` activates FSM pointed by ```this``` and sets its state to ```s1```. If FSM is already active, this function does nothing. FSM becomes ready to waits for events.
+
+## SM_StartWithEvent
+
+```
+void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev);
+```
+
+```SM_StartWithEvent``` activates FSM pointed by ```this```, sets its state to ```s1``` and pushes into event buffer the event ```ev```. If FSM is already active, this function does nothing. Pushing an event makes FSM begin working immediately.
+
+## SM_Activate
+
+```
+void SM_Activate (SM_MACHINE* this);
+```
+
+```SM_Activate``` enables FSM pointed to by ```this```.
+
+## SM_Deactivate
+
+```
+void SM_Deactivate (SM_MACHINE* this);
+```
+
+```SM_Deactivate``` disables FSM pointed to by ```this```.
+
+## SM_IsActivated
+
+```
+bool SM_IsActivated (SM_MACHINE* this);
+```
+
+```SM_IsActivated``` returns the state of FSM: ```true``` if FSM is active (working) and ```false``` otherwise.
+
+## SM_TraceOn
+
+```
+void SM_TraceOn (SM_MACHINE* this);
+```
+
+```SM_TraceOn``` enables trace function.
+
+## SM_TraceOff
+
+```
+void SM_TraceOff (SM_MACHINE* this);
+```
+
+```SM_TraceOff``` disables trace function.
+
+## SM_SetTracers
+
+```
+void SM_SetTracers(SM_MACHINE* this, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
+```
+
+```SM_SetTracers``` sets tracers for FSM pointed to by ``this```. These are
+- ```trm``` - transition tracer
+- ```trc``` - context tracer
+- ```trle``` - lost events tracer
+
+Each of these parameters can be ```NULL``.
+
+## SM_IsTraceEnabled
+
+```
+bool SM_IsTraceEnabled (SM_MACHINE* this);
+```
+
+```SM_IsTraceEnabled``` returns the state of trace: ```true``` if trace enabled and ```false``` otherwise.

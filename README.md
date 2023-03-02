@@ -16,14 +16,14 @@ State machine helps separate the logic from actions. It makes clear separation b
 
 State machine (Finite state machine - FSM) is an abstract machine that
 
-- has finite number of states and it can be in exactly one of these states at any given state. One of these states is start state.
-- has finite number of input events that the machine reacts
+- has finite number of states and it can be in exactly one of these states at any given time. One of these states is a start state.
+- has finite number of input events that the machine reacts to
 - has finite number of transtions between the states.
-- has finite number of output actions that the machine executes on transitions
+- has finite number of output actions that the machine executes when performing transitions
 - each state may be assigned an entry action and an exit action
 - each transition may be assigned a logical guard function
 
-The work of FSM is to perform transitions step by step. The FSM, depending on the current state S1 and the current input event ev, executes a transtion to new state S2 and executes an output action. The transition is executed if it has not guard or the if the guard permits the transition. On permitted trnasition, following happens:
+The work of FSM is to perform transitions step by step. The FSM, depending on the current state ```S1``` and the current input event ```Event```, chooses a transition and executes it to a new state ```S2```. In "the middle" of the transition it executes an output action. A transition is executed if it has no guard or the if the guard permits the transition. On permitted transition, following happens:
 
 - if the current state has an exit action, it is executed if the new state differ from the current state.
 - if the transition has defined an action it is executed
@@ -33,16 +33,17 @@ The work of FSM is to perform transitions step by step. The FSM, depending on th
 
 Guards that are assigned to transitions are pairs of logical function and polarity. A guard permits a tranistion when its logical result xor'ed with the polarity gives result ```true```. One logical function may be part of two or more transitions with different polarities. This fact may be used to create some non-determinism in the state machine.
 
-# Implementation
+# Implementation. Data.
 
 ## Events
 
-Events are reprsented as values of type ```EVENT_TYPE```. It is defined as an ```enum```.
+Events are reprsented as values of type ```EVENT_TYPE```. It is defined as an ```enum```. Example:
 
 ```
 enum events_list {
     evNullEvent,
 // TO DO: insert application events here
+	evButtonPressed, evButtonReleased,
 
     evEventsNumber	
 };
@@ -59,8 +60,9 @@ The names of the events shall represent its semantic. Example: ```evDoorOpened``
 
 ## States
 
-States in SM have individual codes, that are presented by ```enums```. It is convenient that each state machine in the applicaion to have its own definition. And example:
+States in FSM have individual codes, that are presented by ```enums```. It is convenient that each state machine in the applicaion to have its own definition of states. And example:
 
+The state machine is called ```P1`` (the process P1). Its states are:
 ```
 enum sP1_states {
     sP1_START, sP1_RESOLVE, sP1_F1, sP1_F2, sP1_F3, sP1_F4,
@@ -77,7 +79,7 @@ Here, the naming is as follows:
 
 Note that it is good idea the last item in an enum to be a special key which repersents the total number of states.
 
-Each state may be assigned an entry and an exit action. These actions are functions with signature ```SM_ACTION```, that are called on executing a transition between the states. What they will do is up to the application programmer.The states have set (array) of transitions which will be executed on arriving correspondent events. A state may have not transitions. This means that FSM will not react to any event. It looks like the state machine has dead.
+Each state may be assigned an entry and an exit action. These actions are functions with signature ```SM_ACTION```, that are called on executing transitions between the states. What they will do is up to the application programmer. The states have set (array) of transitions which will be executed on arriving correspondent events. A state may have not transitions. This means that FSM will not react to any event. It looks like the state machine has dead.
 
 Each state have a structure of data. Here it is:
 
@@ -90,7 +92,7 @@ struct sm_state {
 };
 typedef struct sm_state SM_STATE;
 ```
-The comments explain what the members are. Transitions are explained below. Here some words about actions. The type ```SM_ACTION``` is defined as follows:
+The comments explain what the members are. Transitions are explained below. Here are some words about actions. The type ```SM_ACTION``` is defined as follows:
 
 ```
 typedef void (*SM_ACTION)(SM_MACHINE* this);
@@ -100,13 +102,13 @@ This is a pointer to a C function returning nothing and accepting a pointer to t
 
 ## Transitions
 
-Transitions do two things - change the FSM state and produce output by executing an action. In contrst fo states and events, transitions do not have ```enum``` types. They are represented by type ```SM_TRANSITION``` and are stored in arrays pointed to by ```const SM_TRANSITION* tr``` from ```SM_STATE``` objects. Here is the type of transitions:
+Transitions do two things - change the FSM state and produce output by executing an action. In contrast of states and events, transitions do not have ```enum``` types. They are represented by type ```SM_TRANSITION``` and are stored in arrays pointed to by ```const SM_TRANSITION* tr``` from ```SM_STATE``` objects. Here is the type of transitions:
 
 ```
 struct sm_transition {
     EVENT_TYPE event;       // trigger event
     STATE_TYPE s2;          // destination state (index in an array)
-    SM_ACTION a;            // action (can be NULL: null action)
+    SM_ACTION a;            // action (can be NULL: no action)
     int ai;                 // action index
     SM_GUARD guard;         // guard: true: transition is permitted, false: transition is forbidden;
                             // (can be NULL, then transition is permitted
@@ -131,11 +133,16 @@ The final result of the guard is result of this expression: ```guard() ^ gpol```
 The state machine has a single object describing it, and it has to be in RAM, not in NVM. It is initialized in runtime so as to point to states array. Here is its type definition:
 
 ```
+// masks for .flags
+#define SM_ACTIVE   0b00000001u // the state machine is active (accepts events)
+#define SM_TREN     0b00000010u // true: found transition is permitted by tr->guard
+#define SM_TRACE    0b10000000u // tracing, if compiled, is enabled
+
 struct sm_machine {
     STATE_TYPE s1;              // current state fo state machine (index)
     int id;                     // state machine identifier (must be unique in the system)
     int flags;                  // internal flags see masks for .flags above
-    EVENT_TYPE ev;              // incoming event been handled
+    EVENT_TYPE ev;              // incoming event being handled
     const SM_STATE* states;     // array of states, s1 is index for it
     int sizes;                  // number of states in states[]
     void* ctx;                  // pointer to struct containing context information for SM
@@ -193,4 +200,7 @@ Lost events are these events that do not trigger any transition in the current s
 Tracers of lost events are to be left to application programmers. They receive a pointer ```this```. ```this->ev``` is the event being traced.
 
 It may be useful to trace not all lost events but events of interest only.
+
+## Functions
+
 

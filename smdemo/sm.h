@@ -83,7 +83,7 @@ void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev);
 void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
 
 int SM_GetID (SM_MACHINE* this);
-int SM_GetCurrentState (SM_MACHINE* this);
+STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
 bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
 int SM_GetStateCount (SM_MACHINE* this);
 

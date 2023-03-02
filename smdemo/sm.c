@@ -264,14 +264,14 @@ int SM_GetID (SM_MACHINE* this)
     return (this != NULL) ? this->id : SM_INVALID;
 }
 
-// uint8_t SM_GetCurrentState (SM_MACHINE* this)
+// STATE_TYPE SM_GetCurrentState (SM_MACHINE* this)
 // Parameters:
 //   SM_MACHINE* this - pointer to state machine
 // Return:
 //   current state of *this
 // Description: SM_GetCurrentState returns current state of the machine.
 
-int SM_GetCurrentState (SM_MACHINE* this)
+STATE_TYPE SM_GetCurrentState (SM_MACHINE* this)
 {
     return (this != NULL) ? this->s1 : SM_INVALID;
 }

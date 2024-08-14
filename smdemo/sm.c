@@ -14,7 +14,7 @@ EVENT_TYPE Event;
 // Parameters:
 //   EVENT_TYPE event - event to be but into SM_EventBuffer[].
 // Description: SM_PutEvent puts event into SM_EventBuffer[]. If there is no space in SM_EventBuffer[]
-// for events this functions does nothing.
+// for events pm functions does nothing.
 
 void SM_PutEvent (EVENT_TYPE event)
 {
@@ -52,7 +52,7 @@ EVENT_TYPE SM_FetchEvent (void)
 // Parameters:
 //   no
 // Return: no
-// Description: This functions flushes all events from SM_EventBuffer[]. This way it resets the buffer.
+// Description: pm functions flushes all events from SM_EventBuffer[]. pm way it resets the buffer.
 
 void SM_FlushEvents (void)
 {
@@ -61,9 +61,9 @@ void SM_FlushEvents (void)
 
 // state machine
 
-// void SM_machine (SM_MACHINE* this)
+// void SM_machine (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 //   EVENT_TYPE ev - event passed ti]o themachine
 // Return: no
 // Description: SM_machine searches for a transition to be triggered by event ev.
@@ -75,14 +75,14 @@ void SM_FlushEvents (void)
 // Order of execution:
 //
 // Permitted transition:
-// 1. Bit SM_TREN in this->flags is set up, because permitted transition is found
+// 1. Bit SM_TREN in pm->flags is set up, because permitted transition is found
 // 2. SM_TraceContext(sm,true)  -- information before exiting s1
 // 3. s1.exit_action            -- exit action of s1 if s1 != s2
 // 4. tr.action                 -- transition action
 // 5. SM_TraceMachine(sm,tr)    -- trace transition
 // 6. s2.entry_action           -- entry action of s2 if s1 != s2
 // 7. SM_TraceContext(sm,false) -- information after entering s2
-// 8. Bit SM_TREN in this->flags is cleared
+// 8. Bit SM_TREN in pm->flags is cleared
 // 9. exit
 //
 // Forbidden transition:
@@ -92,7 +92,7 @@ void SM_FlushEvents (void)
 // SM_TraceContext may distinguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
-void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev)
+void SM_Machine (SM_MACHINE* pm, EVENT_TYPE ev)
 {
     uint8_t i;                  // loop variable
     const SM_STATE* st;         // pointer to current state
@@ -102,18 +102,18 @@ void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev)
     static bool found;          // found a transition, disabled or enabled
 
     if ((ev != evNullEvent) &&
-        (this != NULL) &&
-        ((this->flags & SM_ACTIVE) != 0u) &&
-        (this->s1 < this->sizes)
+        (pm != NULL) &&
+        ((pm->flags & SM_ACTIVE) != 0u) &&
+        (pm->s1 < pm->sizes)
        ) {
-        this->ev = ev;
+        pm->ev = ev;
 // copy to local variables for faster execution
-        st = &(this->states[this->s1]); // current state
+        st = &(pm->states[pm->s1]); // current state
         if (st != NULL) {
             tr = st->tr;            // transition array of current state (or NULL)
             sz = st->size;          // number of transitions in tr[]
         } else {
-            tr = NULL;              // found a NULL pointer in SM_STATE[this->s1]
+            tr = NULL;              // found a NULL pointer in SM_STATE[pm->s1]
             sz = 0u;
         }
 
@@ -124,71 +124,71 @@ void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev)
                 if (tr->event == ev) {
                     found = true;   // used by lost event tracer; otherwise ignored
 // check target state for validity -- if invalid s2 is found, break SM loop and silently exit
-                    if (tr->s2 >= this->sizes) {
+                    if (tr->s2 >= pm->sizes) {
                         break;
                     }
 // check guard:
 // transition is executed if (1) there is no guard or (2) the guard permits it (returns true)
-                    if ((tr->guard == NULL) || ((tr->guard(this) ^ tr->gpol) == true)) {
-                        this->flags |= SM_TREN;
+                    if ((tr->guard == NULL) || ((tr->guard(pm) ^ tr->gpol) == true)) {
+                        pm->flags |= SM_TREN;
 #if defined(SM_TRACER)
-                        if (SM_IsTraceEnabled(this) == true) {
-                            if (this->trc != NULL) {
-                                this->trc(this,true);
+                        if (SM_IsTraceEnabled(pm) == true) {
+                            if (pm->trc != NULL) {
+                                pm->trc(pm,true);
                             }
                         }
 #endif  // defined(SM_TRACER)
 // check if target state is different from start state
                         s1neqs2 = true;
-                        if (tr->s2 == this->s1) {
+                        if (tr->s2 == pm->s1) {
                             s1neqs2 = false;
                         }
 // call of exit_action of s1, if there is a state change and if exit_action is defined for s1
                         if (s1neqs2 == true) {
                             if (st->exit_action != NULL) {
-                                st->exit_action(this);
+                                st->exit_action(pm);
                             }
                         }
 // action on transition
                         if (tr->a != NULL) {
-                            tr->a(this);
+                            tr->a(pm);
                         }
 #if defined(SM_TRACER)
-                        if (SM_IsTraceEnabled(this) == true) {
-                            if (this->trm != NULL) {
-                                this->trm(this,tr);
+                        if (SM_IsTraceEnabled(pm) == true) {
+                            if (pm->trm != NULL) {
+                                pm->trm(pm,tr);
                             }
                         }
 #endif  // defined(SM_TRACER)
 // transition to s2
-                        this->s1 = tr->s2;
+                        pm->s1 = tr->s2;
 // call of entry_action, if there is a state change and if entry_action is defined for s2
                         if (s1neqs2 == true) {
-                            st = &(this->states[this->s1]);
+                            st = &(pm->states[pm->s1]);
                             if (st->entry_action != NULL) {
-                                 st->entry_action(this);
+                                 st->entry_action(pm);
                             }
                         }
 #if defined(SM_TRACER)
-                        if (SM_IsTraceEnabled(this) == true) {
-                            if (this->trc != NULL) {
-                                this->trc(this,false);
+                        if (SM_IsTraceEnabled(pm) == true) {
+                            if (pm->trc != NULL) {
+                                pm->trc(pm,false);
                             }
                         }
 #endif  // defined(SM_TRACER)
 // transition is executed, so exit from loop
-                        this->flags &= ~SM_TREN;
+                        pm->flags &= ~SM_TREN;
                         break;
                     } else {
 // forbidden transition
-                        this->flags &= ~SM_TREN;
+                        pm->flags &= ~SM_TREN;
 #if defined(SM_TRACER)
-                        if (SM_IsTraceEnabled(this) == true) {
-                            if (this->trc != NULL) {
-                                this->trc(this,true);
+                        if (SM_IsTraceEnabled(pm) == true) {
+                            if (pm->trc != NULL) {
+                                pm->trc(pm,true);
                             }
-                            if (this->trm != NULL) {
-                                this->trm(this,tr);
+                            if (pm->trm != NULL) {
+                                pm->trm(pm,tr);
                             }
                         }
 #endif  // defined(SM_TRACER)
@@ -198,9 +198,9 @@ void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev)
         }
 #if defined(SM_TRACER)
         if (found == false) {
-            if (SM_IsTraceEnabled(this) == true) {
-                if (this->trle != NULL) {
-                    this->trle(this);
+            if (SM_IsTraceEnabled(pm) == true) {
+                if (pm->trle != NULL) {
+                    pm->trle(pm);
                 }
             }
         }
@@ -208,168 +208,168 @@ void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev)
     }
 }
 
-// static void SM_ClearFlags(SM_MACHINE* this)
+// static void SM_ClearFlags(SM_MACHINE* pm)
 // Parameters:
-//  SM_MACHINE* this - pointer to state machine
+//  SM_MACHINE* pm - pointer to state machine
 // Return: no
 // Description: Reset all flags to zero (false).
 
-void SM_ClearFlags(SM_MACHINE* this);
-void SM_ClearFlags(SM_MACHINE* this)
+void SM_ClearFlags(SM_MACHINE* pm);
+void SM_ClearFlags(SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        this->flags = 0u;
+    if (pm != NULL) {
+        pm->flags = 0u;
     }
 }
 
-// void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx)
+// void SM_Initialize (SM_MACHINE* pm, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 //   STATE_TYPE s1 - start (initial) state
 //   int id - identifier of state machine
 //   const SM_STATE* states - pointer to states array
 //   int sizes - size of states array
 //   void* ctx - pointer to user defined context structure
 // Return: no
-// Description: SM_Initialize initializes *this fields with parameters.
+// Description: SM_Initialize initializes *pm fields with parameters.
 
-void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx)
+void SM_Initialize (SM_MACHINE* pm, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx)
 {
-    if (this != NULL) {
-        this->s1 = s1;
-        this->id = id;
-        this->states = states;
-        this->sizes = sizes;
+    if (pm != NULL) {
+        pm->s1 = s1;
+        pm->id = id;
+        pm->states = states;
+        pm->sizes = sizes;
 
-        SM_SetContext(this,ctx);
-        SM_ClearFlags(this);
+        SM_SetContext(pm,ctx);
+        SM_ClearFlags(pm);
 
 #if defined(SM_TRACER)
-        this->trm = NULL;
-        this->trc = NULL;
-        this->trle = NULL;
+        pm->trm = NULL;
+        pm->trc = NULL;
+        pm->trle = NULL;
 #endif  // defined(SM_TRACER)
     }
 }
 
-// int SM_GetID (SM_MACHINE* this)
+// int SM_GetID (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return:
 //   Identifier of state machine
-// Description: SM_GetID returns the identifier of state machine *this.
+// Description: SM_GetID returns the identifier of state machine *pm.
 
-int SM_GetID (SM_MACHINE* this)
+int SM_GetID (SM_MACHINE* pm)
 {
-    return (this != NULL) ? this->id : SM_INVALID;
+    return (pm != NULL) ? pm->id : SM_INVALID;
 }
 
-// STATE_TYPE SM_GetCurrentState (SM_MACHINE* this)
+// STATE_TYPE SM_GetCurrentState (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return:
-//   current state of *this
+//   current state of *pm
 // Description: SM_GetCurrentState returns current state of the machine.
 
-STATE_TYPE SM_GetCurrentState (SM_MACHINE* this)
+STATE_TYPE SM_GetCurrentState (SM_MACHINE* pm)
 {
-    return (this != NULL) ? this->s1 : SM_INVALID;
+    return (pm != NULL) ? pm->s1 : SM_INVALID;
 }
 
-// bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1)
+// bool SM_SetCurrentState (SM_MACHINE* pm, STATE_TYPE s1)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 //   STATE_TYPE s1 - state
 // Return:
 //   true: State Machine is put in s1 state
 //   false: State Machine is not touched, because s1 is invalid
 
-bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1)
+bool SM_SetCurrentState (SM_MACHINE* pm, STATE_TYPE s1)
 {
-    if (this != NULL) {
-        if (s1 < this->sizes) {
-            this->s1 = s1;
+    if (pm != NULL) {
+        if (s1 < pm->sizes) {
+            pm->s1 = s1;
             return true;
         }
     }
     return false;
 }
 
-// int SM_GetStateCount (SM_MACHINE* this)
+// int SM_GetStateCount (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return:
-//   number of states in *this
-// Description: SM_GetStateCount returns the number of states of *this.
+//   number of states in *pm
+// Description: SM_GetStateCount returns the number of states of *pm.
 
-int SM_GetStateCount (SM_MACHINE* this)
+int SM_GetStateCount (SM_MACHINE* pm)
 {
-    return (this != NULL) ? this->sizes : SM_INVALID;
+    return (pm != NULL) ? pm->sizes : SM_INVALID;
 }
 
-// void SM_SetContext (SM_MACHINE* this, void* ctx)
+// void SM_SetContext (SM_MACHINE* pm, void* ctx)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: no
-// Description: Sets context of the state machine pointed to by *this.
+// Description: Sets context of the state machine pointed to by *pm.
 
-void SM_SetContext (SM_MACHINE* this, void* ctx)
+void SM_SetContext (SM_MACHINE* pm, void* ctx)
 {
-    if (this != NULL) {
-        this->ctx = ctx;
+    if (pm != NULL) {
+        pm->ctx = ctx;
     }
 }
 
-// void* SM_GetContext (SM_MACHINE* this)
+// void* SM_GetContext (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: pointer to context structure
-// Description: Return pointer to a structure that contains context information of *this state machine.
+// Description: Return pointer to a structure that contains context information of *pm state machine.
 
-void* SM_GetContext (SM_MACHINE* this)
+void* SM_GetContext (SM_MACHINE* pm)
 {
-    return (this != NULL) ? this->ctx : NULL;
+    return (pm != NULL) ? pm->ctx : NULL;
 }
 
-// uint8_t SM_Start (SM_MACHINE* this, STATE_TYPE s1)
+// uint8_t SM_Start (SM_MACHINE* pm, STATE_TYPE s1)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 //   STATE_TYPE s1 - start state
 // Return: no
-// Description: SM_Start puts the state machine pointed to by *this in state s1 and activates it.
-// If s1 is not valid this function does not have any effect. It the state machine has been already
-// activated, this function does not do anything.
-// After call of SM_StartWithEvent the caller should check if *this is activated.
+// Description: SM_Start puts the state machine pointed to by *pm in state s1 and activates it.
+// If s1 is not valid pm function does not have any effect. It the state machine has been already
+// activated, pm function does not do anything.
+// After call of SM_StartWithEvent the caller should check if *pm is activated.
 
-void SM_Start (SM_MACHINE* this, STATE_TYPE s1)
+void SM_Start (SM_MACHINE* pm, STATE_TYPE s1)
 {
-    if (this != NULL) {
-        if (SM_IsActivated(this) == false) {
-            if (SM_SetCurrentState(this,s1) == true) {
-                SM_Activate(this);
+    if (pm != NULL) {
+        if (SM_IsActivated(pm) == false) {
+            if (SM_SetCurrentState(pm,s1) == true) {
+                SM_Activate(pm);
             }
         }
     }
 }
 
-// void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev)
+// void SM_StartWithEvent (SM_MACHINE* pm, STATE_TYPE s1, EVENT_TYPE ev)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 //   STATE_TYPE s1 - start state
-//   EVENT_TYPE ev - event that triggers *this in s1
+//   EVENT_TYPE ev - event that triggers *pm in s1
 // Return: no
-// Description: SM_StartWithEvent puts the state machine pointed to by *this in state s1, activates it
+// Description: SM_StartWithEvent puts the state machine pointed to by *pm in state s1, activates it
 // and then injects event ev. If s1 is not valid this function does not have any effect. If the state machine
-// has been already activated, this function does not do anything.
-// After the call of SM_StartWithEvent the caller should check if *this is activated.
+// has been already activated, pm function does not do anything.
+// After the call of SM_StartWithEvent the caller should check if *pm is activated.
 
-void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev)
+void SM_StartWithEvent (SM_MACHINE* pm, STATE_TYPE s1, EVENT_TYPE ev)
 {
-    if (this != NULL) {
-        if (SM_IsActivated(this) == false) {
+    if (pm != NULL) {
+        if (SM_IsActivated(pm) == false) {
             if (ev < evEventsNumber) {
-                if (SM_SetCurrentState(this,s1) == true) {
-                    SM_Activate(this);
+                if (SM_SetCurrentState(pm,s1) == true) {
+                    SM_Activate(pm);
                     SM_PutEvent(ev);
                 }
             }
@@ -377,99 +377,99 @@ void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev)
     }
 }
 
-// void SM_Activate (SM_MACHINE* this)
+// void SM_Activate (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: no
-// Description: SM_Activate activates *this.
+// Description: SM_Activate activates *pm.
 
-void SM_Activate (SM_MACHINE* this)
+void SM_Activate (SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        this->flags |= SM_ACTIVE;
+    if (pm != NULL) {
+        pm->flags |= SM_ACTIVE;
     }
 }
 
-// void SM_Deactivate (SM_MACHINE* this)
+// void SM_Deactivate (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: no
-// Description: SM_Deactivate deactivates *this. *this will not act on any events.
+// Description: SM_Deactivate deactivates *pm. *pm will not act on any events.
 
-void SM_Deactivate (SM_MACHINE* this)
+void SM_Deactivate (SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        this->flags &= ~SM_ACTIVE;
+    if (pm != NULL) {
+        pm->flags &= ~SM_ACTIVE;
     }
 }
 
-// bool SM_IsActivated (SM_MACHINE* this)
+// bool SM_IsActivated (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
-// Return: true: *this is active; false: *this is not active
-// Description: Determine if *this is active.
+//   SM_MACHINE* pm - pointer to state machine
+// Return: true: *pm is active; false: *pm is not active
+// Description: Determine if *pm is active.
 
-bool SM_IsActivated (SM_MACHINE* this)
+bool SM_IsActivated (SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        return ((this->flags & SM_ACTIVE) != 0u) ? true : false;
+    if (pm != NULL) {
+        return ((pm->flags & SM_ACTIVE) != 0u) ? true : false;
     }
     return false;
 }
 
 #if defined(SM_TRACER)
 
-// void SM_TraceOn (SM_MACHINE* this)
+// void SM_TraceOn (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: no
-// Description: SM_TraceOn enables tracing of *this state machine
+// Description: SM_TraceOn enables tracing of *pm state machine
 
-void SM_TraceOn (SM_MACHINE* this)
+void SM_TraceOn (SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        this->flags |= SM_TRACE;
+    if (pm != NULL) {
+        pm->flags |= SM_TRACE;
     }
 }
 
-// void SM_TraceOff (SM_MACHINE* this)
+// void SM_TraceOff (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: no
-// Description: SM_TraceOff disables tracing of *this state machine
+// Description: SM_TraceOff disables tracing of *pm state machine
 
-void SM_TraceOff (SM_MACHINE* this)
+void SM_TraceOff (SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        this->flags &= ~SM_TRACE;
+    if (pm != NULL) {
+        pm->flags &= ~SM_TRACE;
     }
 }
 
-// void SM_SetTracers(SM_MACHINE* this, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc
+// void SM_SetTracers(SM_MACHINE* pm, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc
 // Parameters:
-//  SM_MACHINE* this - pointer to state machine
+//  SM_MACHINE* pm - pointer to state machine
 //  SM_TRANSITION_TRACER trm - pointer to a transition tracer
 //  SM_CONTEXT_TRACER trc - pointer to a context tracer
 //  SM_LOSTEVENT_TRACER trle - pointer to a lost events tracer
-void SM_SetTracers(SM_MACHINE* this, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle)
+void SM_SetTracers(SM_MACHINE* pm, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle)
 {
-    if (this != NULL) {
-        this->trm = trm;
-        this->trc = trc;
-        this->trle = trle;
+    if (pm != NULL) {
+        pm->trm = trm;
+        pm->trc = trc;
+        pm->trle = trle;
     }
 }
 
-// bool SM_IsTraceEnabled (SM_MACHINE* this)
+// bool SM_IsTraceEnabled (SM_MACHINE* pm)
 // Parameters:
-//   SM_MACHINE* this - pointer to state machine
+//   SM_MACHINE* pm - pointer to state machine
 // Return: true: trace is enabled; false: trace is disabled
-// Description: Determine if tracing of *this is enabled.
+// Description: Determine if tracing of *pm is enabled.
 
-bool SM_IsTraceEnabled (SM_MACHINE* this)
+bool SM_IsTraceEnabled (SM_MACHINE* pm)
 {
-    if (this != NULL) {
-        return ((this->flags & SM_TRACE) != 0) ? true : false;
+    if (pm != NULL) {
+        return ((pm->flags & SM_TRACE) != 0) ? true : false;
     }
     return false;
 }

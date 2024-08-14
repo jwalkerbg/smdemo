@@ -24,12 +24,12 @@ typedef struct sm_machine SM_MACHINE;
 typedef struct sm_transition SM_TRANSITION;
 typedef struct sm_state SM_STATE;
 
-typedef void (*SM_ACTION)(SM_MACHINE* this);
-typedef bool (*SM_GUARD)(SM_MACHINE* this);
+typedef void (*SM_ACTION)(SM_MACHINE* pm);
+typedef bool (*SM_GUARD)(SM_MACHINE* pm);
 #if defined(SM_TRACER)
-typedef void (*SM_TRANSITION_TRACER)(SM_MACHINE* this, const SM_TRANSITION* tr);
-typedef void (*SM_CONTEXT_TRACER)(SM_MACHINE* this, uint8_t when);
-typedef void (*SM_LOSTEVENT_TRACER)(SM_MACHINE* this);
+typedef void (*SM_TRANSITION_TRACER)(SM_MACHINE* pm, const SM_TRANSITION* tr);
+typedef void (*SM_CONTEXT_TRACER)(SM_MACHINE* pm, uint8_t when);
+typedef void (*SM_LOSTEVENT_TRACER)(SM_MACHINE* pm);
 #endif  // defined(SM_TRACER)
 
 // transition
@@ -78,23 +78,23 @@ struct sm_machine {
 #endif  // defined(SM_TRACER)
 };
 
-void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev);
+void SM_Machine (SM_MACHINE* pm, EVENT_TYPE ev);
 
-void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
+void SM_Initialize (SM_MACHINE* pm, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
 
-int SM_GetID (SM_MACHINE* this);
-STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
-bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
-int SM_GetStateCount (SM_MACHINE* this);
+int SM_GetID (SM_MACHINE* pm);
+STATE_TYPE SM_GetCurrentState (SM_MACHINE* pm);
+bool SM_SetCurrentState (SM_MACHINE* pm, STATE_TYPE s1);
+int SM_GetStateCount (SM_MACHINE* pm);
 
-void SM_SetContext (SM_MACHINE* this, void* ctx);
-void* SM_GetContext (SM_MACHINE* this);
+void SM_SetContext (SM_MACHINE* pm, void* ctx);
+void* SM_GetContext (SM_MACHINE* pm);
 
-void SM_Start (SM_MACHINE* this, STATE_TYPE s1);
-void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev);
-void SM_Activate (SM_MACHINE* this);
-void SM_Deactivate (SM_MACHINE* this);
-bool SM_IsActivated (SM_MACHINE* this);
+void SM_Start (SM_MACHINE* pm, STATE_TYPE s1);
+void SM_StartWithEvent (SM_MACHINE* pm, STATE_TYPE s1, EVENT_TYPE ev);
+void SM_Activate (SM_MACHINE* pm);
+void SM_Deactivate (SM_MACHINE* pm);
+bool SM_IsActivated (SM_MACHINE* pm);
 
 #if defined(SM_TRACER)
 
@@ -108,10 +108,10 @@ struct sm_tracedata {
 };
 typedef struct sm_tracedata SM_TRACEDATA;
 
-void SM_TraceOn (SM_MACHINE* this);
-void SM_TraceOff (SM_MACHINE* this);
-void SM_SetTracers(SM_MACHINE* this, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
-bool SM_IsTraceEnabled (SM_MACHINE* this);
+void SM_TraceOn (SM_MACHINE* pm);
+void SM_TraceOff (SM_MACHINE* pm);
+void SM_SetTracers(SM_MACHINE* pm, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
+bool SM_IsTraceEnabled (SM_MACHINE* pm);
 
 #endif  // defined(SM_TRACER)
 

@@ -39,13 +39,13 @@ Guards that are assigned to transitions are pairs of logical function and polari
 
 Events are reprsented as values of type ```EVENT_TYPE```. It is defined as an ```enum```. Example:
 
-```
+```c
 enum events_list {
     evNullEvent,
 // TO DO: insert application events here
 	evButtonPressed, evButtonReleased,
 
-    evEventsNumber	
+    evEventsNumber
 };
 typedef enum events_list EVENT_TYPE;
 ```
@@ -63,7 +63,8 @@ The names of the events shall represent its semantic. Example: ```evDoorOpened``
 States in FSM have individual codes, that are presented by ```enums```. It is convenient that each state machine in the applicaion to have its own definition of states. And example:
 
 The state machine is called ```P1`` (the process P1). Its states are:
-```
+
+```c
 enum sP1_states {
     sP1_START, sP1_RESOLVE, sP1_F1, sP1_F2, sP1_F3, sP1_F4,
 
@@ -83,7 +84,7 @@ Each state may be assigned an entry and an exit action. These actions are functi
 
 Each state have a structure of data. Here it is:
 
-```
+```c
 struct sm_state {
     const SM_TRANSITION* tr;    // array of exit transitions (can be NULL: no exit transition from the state)
     int size;                   // number of transitions in tr[]
@@ -104,7 +105,7 @@ This is a pointer to a C function returning nothing and accepting a pointer to t
 
 Transitions do two things - change the FSM state and produce output by executing an action. In contrast of states and events, transitions do not have ```enum``` types. They are represented by type ```SM_TRANSITION``` and are stored in arrays pointed to by ```const SM_TRANSITION* tr``` from ```SM_STATE``` objects. Here is the type of transitions:
 
-```
+```c
 struct sm_transition {
     EVENT_TYPE event;       // trigger event
     STATE_TYPE s2;          // destination state (index in an array)
@@ -119,12 +120,12 @@ typedef struct sm_transition SM_TRANSITION;
 
 Meaning of the fields
 
-- event = this is triggering event. When incoming event is equal to this value, the transition becomes a candidate fo execution.
-- s2 - the new state. The value is one of the values in the above ```enum```, containing state names. Please remember that this ```enum``` is defined by the application programmer.
-- a - this is a pointer tu a function (action) that will be executed if the transition is selected for execution
-- ai - action index. It has supplemental role. It is not used by the FSM, however serves as index in arrays with action names that can be used in FSM tracers. More about this in the sections of FSM tracing.
-- guard - this a pointer to a function that return ```true``` or ```false```. Returning ```true```  means that the guard permits the execution of the transition, and ```false``` means that it does not permit the transition.
-- gpol - this is a flag that may or may not negate the result if the guard. gpol may have values of ```SM_GPOL_POSITIVE`` or ```SM_GPOL_NEGATIVE```.
+- `event` = this is triggering event. When incoming event is equal to this value, the transition becomes a candidate fo execution.
+- `s2` - the new state. The value is one of the values in the above ```enum```, containing state names. Please remember that this ```enum``` is defined by the application programmer.
+- `a` - this is a pointer tu a function (action) that will be executed if the transition is selected for execution
+- `ai` - action index. It has supplemental role. It is not used by the FSM, however serves as index in arrays with action names that can be used in FSM tracers. More about this in the sections of FSM tracing.
+- `guard` - this a pointer to a function that return ```true``` or ```false```. Returning ```true```  means that the guard permits the execution of the transition, and ```false``` means that it does not permit the transition.
+- `gpol` - this is a flag that may or may not negate the result if the guard. gpol may have values of ```SM_GPOL_POSITIVE``` or ```SM_GPOL_NEGATIVE```.
 
 The final result of the guard is result of this expression: ```guard() ^ gpol```. ```SM_GPOL_POSITIVE``` leaves the gaurd result as is. ```SM_GPOL_NEGATIVE``` turns ```true``` to ```false``` and ```false``` to ```true```. This possibility is used to embed non-determinism: Two transitions may be defined with the same triggering event, but with different polarities.
 
@@ -132,7 +133,7 @@ The final result of the guard is result of this expression: ```guard() ^ gpol```
 
 The state machine has a single object describing it, and it has to be in RAM, not in NVM. It is initialized in runtime so as to point to states array. Here is its type definition:
 
-```
+```c
 // masks for .flags
 #define SM_ACTIVE   0b00000001u // the state machine is active (accepts events)
 #define SM_TREN     0b00000010u // true: found transition is permitted by tr->guard
@@ -160,11 +161,11 @@ The comments in the structure describe the fields.
 
 ## Context
 
-The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contexts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* this``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type. 
+The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contexts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* this``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type.
 
 # Trace
 
-FSM has embedded tracing capabilities. There are three trace functions that (1) are pointed to by poiners in ```SM_MACHINE``` object and (2) they are supplied by the application program. Tracers are provided in this demo project and can be used to develop appropriate tracers in real applications. The tracers are pointed by 
+FSM has embedded tracing capabilities. There are three trace functions that (1) are pointed to by poiners in ```SM_MACHINE``` object and (2) they are supplied by the application program. Tracers are provided in this demo project and can be used to develop appropriate tracers in real applications. The tracers are pointed by
 
 Trace capabilities are compiled if ```SM_TRACER``` preprocessor constant is defined. Without it, no trace functions are compiled however the production code may become smaller and faster. If tracing is compiled, it can be enabled or disabled (default option) in runtime event in the actions of the state machine.
 
@@ -186,7 +187,7 @@ where
  - Event is the event that has triggered the transition
  - Action is the action being performed in the transition
  - "permitted" or "not permitted" marks tell whether the action has been permitted to be executed or not.
- 
+
 As it can be seen, this ouput gives information how FSM logic works at its level of abstraction.
 
 ## Trace context
@@ -207,13 +208,13 @@ All functions receive a pointer to FSM object of type ```SM_MACHINE* this```. Th
 
 ## SM_Machine
 
-```
+```c
 void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev);
 ```
 
 ## SM_Initialize
 
-```
+```c
 void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
 ```
 
@@ -229,7 +230,7 @@ Parameters:
 
 ## SM_GetID
 
-```
+```c
 int SM_GetID (SM_MACHINE* this);
 ```
 
@@ -237,7 +238,7 @@ int SM_GetID (SM_MACHINE* this);
 
 ## SM_GetCurrentState
 
-```
+```c
 STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
 ```
 
@@ -245,7 +246,7 @@ STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
 
 ## SM_SetCurrentState
 
-```
+```c
 bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
 ```
 
@@ -253,7 +254,7 @@ bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
 
 ## SM_GetStateCount
 
-```
+```c
 int SM_GetStateCount (SM_MACHINE* this);
 ```
 
@@ -261,7 +262,7 @@ int SM_GetStateCount (SM_MACHINE* this);
 
 ## SM_SetContext
 
-```
+```c
 void SM_SetContext (SM_MACHINE* this, void* ctx);
 ```
 
@@ -269,7 +270,7 @@ void SM_SetContext (SM_MACHINE* this, void* ctx);
 
 ## SM_GetContext
 
-```
+```c
 void* SM_GetContext (SM_MACHINE* this);
 ```
 
@@ -277,7 +278,7 @@ void* SM_GetContext (SM_MACHINE* this);
 
 ## SM_Start
 
-```
+```c
 void SM_Start (SM_MACHINE* this, STATE_TYPE s1);
 ```
 
@@ -285,7 +286,7 @@ void SM_Start (SM_MACHINE* this, STATE_TYPE s1);
 
 ## SM_StartWithEvent
 
-```
+```c
 void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev);
 ```
 
@@ -293,7 +294,7 @@ void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev);
 
 ## SM_Activate
 
-```
+```c
 void SM_Activate (SM_MACHINE* this);
 ```
 
@@ -301,7 +302,7 @@ void SM_Activate (SM_MACHINE* this);
 
 ## SM_Deactivate
 
-```
+```c
 void SM_Deactivate (SM_MACHINE* this);
 ```
 
@@ -309,7 +310,7 @@ void SM_Deactivate (SM_MACHINE* this);
 
 ## SM_IsActivated
 
-```
+```c
 bool SM_IsActivated (SM_MACHINE* this);
 ```
 
@@ -317,7 +318,7 @@ bool SM_IsActivated (SM_MACHINE* this);
 
 ## SM_TraceOn
 
-```
+```c
 void SM_TraceOn (SM_MACHINE* this);
 ```
 
@@ -325,7 +326,7 @@ void SM_TraceOn (SM_MACHINE* this);
 
 ## SM_TraceOff
 
-```
+```c
 void SM_TraceOff (SM_MACHINE* this);
 ```
 
@@ -333,7 +334,7 @@ void SM_TraceOff (SM_MACHINE* this);
 
 ## SM_SetTracers
 
-```
+```c
 void SM_SetTracers(SM_MACHINE* this, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
 ```
 
@@ -346,7 +347,7 @@ Each of these parameters can be ```NULL``.
 
 ## SM_IsTraceEnabled
 
-```
+```c
 bool SM_IsTraceEnabled (SM_MACHINE* this);
 ```
 

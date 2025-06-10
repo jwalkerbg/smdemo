@@ -1,5 +1,38 @@
 # State Machine
 
+- [State Machine](#state-machine)
+- [Formal definition.](#formal-definition)
+  - [Definition](#definition)
+  - [Guards](#guards)
+- [Implementation. Data.](#implementation-data)
+  - [Events](#events)
+  - [States](#states)
+  - [Transitions](#transitions)
+  - [State machine object](#state-machine-object)
+  - [Context](#context)
+- [Trace](#trace)
+  - [Trace state machine](#trace-state-machine)
+  - [Trace context](#trace-context)
+  - [Trace lost events](#trace-lost-events)
+- [Implementation. Functions.](#implementation-functions)
+  - [SM\_Machine](#sm_machine)
+  - [SM\_Initialize](#sm_initialize)
+  - [SM\_GetID](#sm_getid)
+  - [SM\_GetCurrentState](#sm_getcurrentstate)
+  - [SM\_SetCurrentState](#sm_setcurrentstate)
+  - [SM\_GetStateCount](#sm_getstatecount)
+  - [SM\_SetContext](#sm_setcontext)
+  - [SM\_GetContext](#sm_getcontext)
+  - [SM\_Start](#sm_start)
+  - [SM\_StartWithEvent](#sm_startwithevent)
+  - [SM\_Activate](#sm_activate)
+  - [SM\_Deactivate](#sm_deactivate)
+  - [SM\_IsActivated](#sm_isactivated)
+  - [SM\_TraceOn](#sm_traceon)
+  - [SM\_TraceOff](#sm_traceoff)
+  - [SM\_SetTracers](#sm_settracers)
+  - [SM\_IsTraceEnabled](#sm_istraceenabled)
+
 SM is an implementation of a event driven finite state machine written in C language.
 
 The state machine is implemented as a single C function that performs a transition between states (if found suitable one and permitted). States and transitions are stored in tables, so the state machine function uses these tables to select transition for execution. Besides this function additional supplemental functions are provided to initialize and maintain the state machine.

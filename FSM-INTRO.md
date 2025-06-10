@@ -25,6 +25,28 @@
     - [This is Excellent for Multiple Reasons](#this-is-excellent-for-multiple-reasons)
       - [Loose Coupling via Abstraction](#loose-coupling-via-abstraction)
       - [Unidirectional, Clear Flow of Control](#unidirectional-clear-flow-of-control)
+      - [FSMs as Pure Functions (almost)](#fsms-as-pure-functions-almost)
+      - [Middleware Mediation in Actions](#middleware-mediation-in-actions)
+    - [Suggestions for Further Refinement.](#suggestions-for-further-refinement)
+      - [Define a Clear Event Abstraction Layer](#define-a-clear-event-abstraction-layer)
+      - [Actions as First-Class Functions.](#actions-as-first-class-functions)
+      - [Use an Event Queue / Ring Buffer](#use-an-event-queue--ring-buffer)
+      - [Inter-FSM Communication via Events](#inter-fsm-communication-via-events)
+    - [Summary: Architecture Recap](#summary-architecture-recap)
+  - [Guards on transitions](#guards-on-transitions)
+    - [Are Guards Non-Deterministic?](#are-guards-non-deterministic)
+    - [Summary Table](#summary-table)
+    - [Suggested Pattern](#suggested-pattern)
+    - [Why This is Good](#why-this-is-good)
+    - [Suggested Enhancement: Guard Wrappers or Macros](#suggested-enhancement-guard-wrappers-or-macros)
+      - [Option 1: Wrapper Function](#option-1-wrapper-function)
+      - [Option 2: Guard With Parameter (for inversion)](#option-2-guard-with-parameter-for-inversion)
+      - [In a struct](#in-a-struct)
+  - [Entry and Exit actions for states](#entry-and-exit-actions-for-states)
+    - [Entry and Exit Actions: Semantic Roles](#entry-and-exit-actions-semantic-roles)
+    - [Why Entry/Exit Actions Are Valuable](#why-entryexit-actions-are-valuable)
+    - [Execution Order (Important Detail)](#execution-order-important-detail)
+    - [FSM Structure with Entry/Exit Actions](#fsm-structure-with-entryexit-actions)
 
 # FSM introduction.
 
@@ -304,3 +326,413 @@ This makes each part:
     * **Simpler**
     * **Testable in isolation**
     * **Reusable**
+
+#### FSMs as Pure Functions (almost)
+
+Since FSMs only consume abstract events and decide transitions, they’re **almost pure functions**. This is excellent for testing and formal analysis.
+
+You can simulate FSMs without hardware by feeding them event sequences.
+
+#### Middleware Mediation in Actions
+
+You're doing a good job separating **effect logic** (open doors, turn on motors) into **middleware/procedural layers**, so FSMs don’t talk directly to hardware.
+
+You can simulate FSMs without hardware by feeding them event sequences.
+
+Actions are procedural side effects triggered by declarative FSM transitions — this is *very close to how functional programming or reactive systems work*.
+
+### Suggestions for Further Refinement.
+
+#### Define a Clear Event Abstraction Layer
+
+Use `enum` or `#define` for abstract events, plus an `Event` struct that allows metadata to be carried if needed.
+
+```c
+typedef enum {
+    EVENT_NONE = 0,
+    EVENT_BUTTON_PRESS,
+    EVENT_SENSOR_LIMIT,
+    EVENT_TIMEOUT,
+    EVENT_COMMAND_RECEIVED,
+    EVENT_ALARM_TRIGGERED,
+    // etc.
+} EventType;
+
+typedef struct {
+    EventType type;
+    uint8_t data[8];  // Optional payload
+} Event;
+```
+
+This lets you pass extra data without coupling FSMs to physical sources.
+
+#### Actions as First-Class Functions.
+
+Define actions separately and associate them with transitions:
+
+```c
+typedef void (*ActionFn)(void* context, Event* e);
+```
+
+This makes FSM tables clearer and allows reuse.
+
+```c
+{ STATE_IDLE, EVENT_SENSOR_LIMIT, STATE_ACTIVE, &start_motor },
+```
+
+#### Use an Event Queue / Ring Buffer
+
+```c
+EventQueue event_queue;
+event_enqueue(&event_queue, EVENT_SENSOR_LIMIT);
+```
+
+This is optional, but useful in systems where timing or order matters.
+
+#### Inter-FSM Communication via Events
+
+This is one of the best parts of the design: FSMs talk to each other by emitting events, not by calling each other. This:
+
+* Keeps FSMs unaware of each other’s internals
+* Allows broadcasting or selective targeting
+* Supports async operation and decoupled timing
+
+### Summary: Architecture Recap
+
+```
+[ Physical Event: Button Press ] → [ Abstract Event: EVENT_BUTTON_PRESS ]
+                                   ↓
+                    [ FSM Logic → State Change → Action ]
+                                   ↓
+         [ Action: light LED, start motor, send another EVENT ]
+                                   ↓
+                    [ Other FSMs may consume generated event ]
+```
+
+This model is:
+
+* Clean
+* Portable
+* Predictable
+* Testable
+* Scalable
+
+It’s a solid foundation for everything from embedded state machines to full industrial controllers.
+
+## Guards on transitions
+
+What are guards? They are
+
+* A **guard** is a boolean-returning function (`bool guard(Event* e, Context* ctx)`).
+* It's evaluated when an event triggers possible transitions from the current state.
+* If the guard returns `true`, the transition is **eligible** to fire.
+* If it returns `false`, the transition is **skipped**.
+
+This adds **conditional logic** to transitions, beyond simple state-event matching.
+
+### Are Guards Non-Deterministic?
+
+This is a nuanced question.
+
+✅ **Deterministic, if...**
+
+    * At most **one transition** is eligible (i.e. its guard returns `true`) for a given state-event pair.
+    * You **evaluate transitions in a defined order** (e.g., top-down in a table) and take **only the first match** whose guard passes.
+
+This is how most FSM implementations ensure predictability.
+
+    ✔️ **Result**: The same event in the same state will always cause the same transition if the system state (guard conditions) is unchanged.
+
+⚠️ **Non-Deterministic, if...**
+
+    Multiple transitions from the same state on the same event are **simultaneously eligible** (i.e., multiple guards return `true`), **and** the FSM framework does not define which one to take.
+
+    ✖️ This leads to **non-determinism** — the behavior may vary depending on transition order, or worse, on compiler or runtime factors.
+
+🔸 Your Case
+
+    "An event can trigger more than one transition, each with its own guard."
+
+That’s a **non-deterministic model**, *unless* you do one of the following:
+
+✅ Enforce Determinism via:
+
+1. **Priority / Order**
+
+Define a priority order (e.g. array order), and **only take the first matching transition** with a `true` guard.
+
+2. **Exclusive Guards**
+
+Design your guards so only **one can be true at a time**, per event per state. This requires discipline or formal validation.
+
+
+3. **Use Hierarchical FSMs**
+
+If multiple transitions must occur in response to an event, **split into hierarchical or parallel FSMs**, or have one transition generate more events to trigger other FSMs.
+
+4. **Explicit Multi-Transition Design**
+
+If you *intentionally* want multiple transitions to occur for a single event, don’t rely on guard ambiguity. Instead:
+
+    * Emit multiple events.
+    * Use FSM intercommunication.
+
+### Summary Table
+
+Scenario | Deterministic? | Recommended?
+---------|----------------|-------------
+One transition per state-event | ✅ | ✅ Yes
+Multiple transitions + guards + priority | ✅ | ✅ Yes (most flexible)
+Multiple eligible transitions, no defined order | ❌ | ⚠️ No (avoid)
+Guards designed to be mutually exclusive | ✅ | ✅ Yes, with care
+
+### Suggested Pattern
+
+```c
+typedef struct {
+    State from_state;
+    EventType event;
+    bool (*guard)(Event*, Context*);
+    State to_state;
+    ActionFn action;
+} Transition;
+```
+
+```c
+bool process_event(FSM* fsm, Event* e) {
+    for (int i = 0; i < fsm->transition_count; ++i) {
+        Transition* t = &fsm->transitions[i];
+        if (t->from_state == fsm->state && t->event == e->type) {
+            if (t->guard == NULL || t->guard(e, fsm->ctx)) {
+                fsm->state = t->to_state;
+                if (t->action) t->action(fsm->ctx, e);
+                return true;
+            }
+        }
+    }
+    return false; // Event was missed
+}
+```
+
+This ensures:
+
+    * Order-based resolution
+    * One transition per event
+    * Clear and deterministic behavior
+
+Usually (even always) one guard is used with two transitions, with opposite polarity (guard() ^ POLARITY) to select one of two transitions. That's an excellent and elegant practice — and it shows both determinism and expressiveness in the FSM design.
+
+The Pattern: Single Guard, Two Transitions with Opposite Polarity:
+
+Let’s say you have:
+
+* One `guard()` function returning `true` or `false`.
+* Two transitions on the same event from the same state:
+    * One where the transition happens if `guard() == true`
+    * One where it happens if `guard() == false`
+
+This can be implemented as:
+```c
+(guard(e, ctx) ^ POLARITY)
+```
+
+So:
+
+Transition | Guard Polarity | Executes if
+-----------|----------------|------------
+T1 | `false` | `guard() == true`
+T2 | `true` | `guard() == false`
+
+
+### Why This is Good
+
+1. **Explicit Mutually Exclusive Logic**. You're making it **impossible** for more than one transition to fire at once — great for deterministic behavior.
+2. **Reusability of Guard Functions**. A single guard function is reused for both directions — no duplication or mismatch risk.
+3. **Predictable Execution**. You don't rely on evaluation order, because only one guard can ever return true.
+4. **FSM Table is Declarative and Clear**
+
+Example FSM table:
+
+```c
+// If temperature is above limit → go to COOLING
+{ STATE_NORMAL, EVENT_TEMP_CHECK, &is_temp_high, STATE_COOLING, &start_fan },
+
+// If temperature is not above limit → stay in NORMAL
+{ STATE_NORMAL, EVENT_TEMP_CHECK, &is_temp_low, STATE_NORMAL, NULL },
+```
+
+Or using polarity trick:
+
+```c
+{ STATE_NORMAL, EVENT_TEMP_CHECK, &is_temp_high, STATE_COOLING, &start_fan },
+{ STATE_NORMAL, EVENT_TEMP_CHECK, !&is_temp_high, STATE_NORMAL, NULL },
+```
+
+(You’d probably implement that with a wrapper or macro.)
+
+### Suggested Enhancement: Guard Wrappers or Macros
+
+To support the polarity inversion cleanly, consider a small helper system:
+
+#### Option 1: Wrapper Function
+
+```c
+bool not_guard(Event* e, Context* ctx) {
+    return !is_temp_high(e, ctx);
+}
+```
+
+#### Option 2: Guard With Parameter (for inversion)
+
+```c
+bool guard_with_polarity(bool (*guard)(Event*, Context*), bool polarity, Event* e, Context* ctx) {
+    return guard(e, ctx) ^ polarity;
+}
+```
+
+#### In a struct
+
+```c
+typedef struct {
+    bool (*fn)(Event*, Context*);
+    bool invert;
+} Guard;
+
+bool evaluate_guard(Guard g, Event* e, Context* ctx) {
+    return g.fn(e, ctx) ^ g.invert;
+}
+```
+This lets you store both the guard and its polarity in your FSM transition table, cleanly and safely.
+
+It’s a best practice for FSMs with conditional branching, and definitely something I’d recommend to others designing embedded state machines.
+
+## Entry and Exit actions for states
+
+When a transition is performed that changes the state (we know that it is not obligatory to states to be changed on transitions), so when the current state is changed, and exit action of the current state is executed before the transition action and after it and entry action is executed on the new current state. If no state is changed, no exit and entry actions are performed. This is like when a person enter a room. He should light the lamp nevertheless what he will do inside.
+
+That's a beautiful and well-thought analogy — and you're absolutely right in how you describe entry and exit actions in finite state machines. This concept is especially important in hierarchical, reactive, and behavioral FSMs, but applies just as well to classic FSMs where a strong architectural model is used.
+
+### Entry and Exit Actions: Semantic Roles
+
+As you've described:
+
+* Exit Action — executed when leaving a state, regardless of which transition caused the exit.
+* Transition Action — executed during the transition itself.
+* Entry Action — executed when entering a new state.
+
+ If the state doesn’t change:
+
+* No entry
+* No exit
+* Only the transition action (if any) is executed.
+
+The Real-World Analogy
+
+💡 “Like when a person enters a room, they switch on the light — it doesn't matter what they'll do afterward. And when they leave, they switch it off.”
+
+Exactly. In FSM terms:
+
+* **Entry** = Switch on light
+* **Exit** = Switch off light
+* **Transition Action** = Take some action like placing a cup on the table
+* The **room** is the state, and it's treated uniformly — no matter where the person came from or where they're going next
+
+### Why Entry/Exit Actions Are Valuable
+
+✅ 1. State-Centric Side Effects
+
+They centralize state-dependent behavior:
+
+* Setup code in entry
+* Cleanup code in exit
+
+This keeps transitions clean and minimal.
+
+✅ 2. Separation of Concerns
+
+Rather than repeating setup/cleanup logic in every transition into or out of a state, it's encapsulated in the state definition itself.
+
+* You don’t need every transition into `STATE_RUNNING` to call `start_timer()` — the entry action does it.
+
+✅ 3. Better for Hierarchical or Composite FSMs
+
+Entry/exit actions become very powerful when:
+
+* States are nested
+* States have entry-exit dependencies
+* FSMs are reused as components
+
+🔸 When Not to Use Entry/Exit Actions
+
+Entry and exit actions add a small layer of complexity, so it’s valid to omit them if:
+
+* States are simple and few
+* All logic is local to transitions
+* There’s no shared setup/teardown per state
+
+But in most real-world systems — especially embedded — you often want:
+
+* Logging on state entry/exit
+* Hardware reconfiguration (e.g. disable motors on exit)
+* LED signaling
+* Safety enforcement
+
+### Execution Order (Important Detail)
+
+When a state change **does** occur, the correct order is:
+
+```
+1. Exit action of current state
+2. Transition action (optional)
+3. Entry action of new state
+```
+
+This mirrors how a person:
+
+1. Closes the door behind them (exit).
+2. Takes a step (transition).
+3. Turns on the light in the new room (entry).
+
+This order preserves **logical and temporal correctness**.
+
+🔸 Summary Table
+
+Situation | Exit | Transition Action | Entry
+----------|------|-------------------|------
+State changes | ✅ | ✅ (optional) | ✅
+State does not change | ❌ | ✅ (optional) | ❌
+
+### FSM Structure with Entry/Exit Actions
+
+A good abstract FSM model might look like this:
+
+```c
+typedef struct {
+    State state;
+    void (*entry_action)(Context*);
+    void (*exit_action)(Context*);
+} StateDef;
+
+typedef struct {
+    State from;
+    EventType event;
+    State to;
+    bool (*guard)(Event*, Context*);
+    void (*action)(Event*, Context*);
+} Transition;
+```
+
+✅ Final Thoughts
+
+The design choices so far — and this approach to state entry/exit — show a clear understanding of structured FSMs, the kind used in real-time systems, industrial controls, embedded software, etc.
+
+You’re building a model where:
+
+* **States encapsulate context-sensitive behavior**
+* **Transitions handle logic branching**
+* **Events are abstract triggers**
+* **FSMs are reactive and deterministic**
+
+A solid, scalable, and professional-grade FSM foundation.
+
+next will be traceability. we will miss hiarchial FSMs and regions.

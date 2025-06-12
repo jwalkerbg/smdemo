@@ -120,10 +120,10 @@ esp_err_t sm_post_event(EVENT_TYPE event)
 // Parameters:
 //   SM_MACHINE* machine - pointer to state machine
 // Return: no
-// Description: SM_machine searches for a transition to be triggered by event ev.
+// Description: SM_machine searches for a transition to be triggered by event event.
 // If it finds transition, it checks if it is permitted by guard (if any). If the
 // transition is found and permitted, it is executed. If there is not permitted transition
-// that could be triggered by ev SM_Machine does nothing.
+// that could be triggered by event SM_Machine does nothing.
 // Note: If tracing is enabled, it is executed and for found but not permitted transitions.
 //
 // Order of execution:
@@ -132,8 +132,8 @@ esp_err_t sm_post_event(EVENT_TYPE event)
 // 1. Bit SM_TREN in machine->flags is set up, because permitted transition is found
 // 2. SM_TraceContext(sm,false) -- information before exiting s1
 // 3. s1.exit_action            -- exit action of s1 if s1 != s2
-// 4. tr.action                 -- transition action
-// 5. SM_TraceMachine(sm,tr)    -- trace transition
+// 4. transition.action                 -- transition action
+// 5. SM_TraceMachine(sm,transition)    -- trace transition
 // 6. s2.entry_action           -- entry action of s2 if s1 != s2
 // 7. SM_TraceContext(sm,true)  -- information after entering s2
 // 8. Bit SM_TREN in machine->flags is cleared
@@ -141,50 +141,50 @@ esp_err_t sm_post_event(EVENT_TYPE event)
 //
 // Forbidden transition:
 // 1. SM_TraceContext(sm,true)  -- information for s1
-// 2. SM_TraceMachine(sm,tr)    -- information for forbidden transition
+// 2. SM_TraceMachine(sm,transition)    -- information for forbidden transition
 
 // SM_TraceContext may distinguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
-void SM_Machine(SM_MACHINE* machine, EVENT_TYPE ev, void* event_data)
+void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
 {
     uint8_t i;                  // loop variable
-    const SM_STATE* st;         // pointer to current state
-    const SM_TRANSITION* tr;    // pointer to transition array of current state
-    uint8_t sz;                 // number of transitions in tr[]
+    const SM_STATE* state;      // pointer to current state
+    const SM_TRANSITION* transition;    // pointer to transition array of current state
+    uint8_t transnum;                   // number of transitions in transition[]
     static bool s1neqs2;        // true, if start and target states are different
     static bool found;          // found a transition, either disabled or enabled
 
-    if ((ev != evNullEvent) &&
+    if ((event != evNullEvent) &&
         (machine != NULL) &&
         ((machine->flags & SM_ACTIVE) != 0u) &&
         (machine->s1 < machine->sizes)
        ) {
-        machine->ev = ev;
+        machine->event = event;
         machine->event_data = event_data;
 // copy to local variables for faster execution
-        st = &(machine->states[machine->s1]); // current state
-        if (st != NULL) {
-            tr = st->tr;            // transition array of current state (or NULL)
-            sz = st->size;          // number of transitions in tr[]
+        state = &(machine->states[machine->s1]); // current state
+        if (state != NULL) {
+            transition = state->transitions;    // transition array of current state (or NULL)
+            transnum = state->size;             // number of transitions in transition[]
         } else {
-            tr = NULL;              // found a NULL pointer in SM_STATE[machine->s1]
-            sz = 0u;
+            transition = NULL;                  // found a NULL pointer in SM_STATE[machine->s1]
+            transnum = 0u;
         }
 
-// search for permitted transition that is triggered by ev
+// search for permitted transition that is triggered by event
         found = false;
-        if (tr != NULL) {
-            for (i = 0u; i < sz; i++, tr++) {
-                if (tr->event == ev) {
+        if (transition != NULL) {
+            for (i = 0u; i < transnum; i++, transition++) {
+                if (transition->event == event) {
                     found = true;   // used by lost event tracer; otherwise ignored
 // check target state for validity -- if invalid s2 is found, break SM loop and silently exit
-                    if (tr->s2 >= machine->sizes) {
+                    if (transition->s2 >= machine->sizes) {
                         break;
                     }
 // check guard:
 // transition is executed if (1) there is no guard or (2) the guard permits it (taking in respect polarity)
-                    if ((tr->guard == NULL) || ((tr->guard(machine) ^ tr->gpol) == true)) {
+                    if ((transition->guard == NULL) || ((transition->guard(machine) ^ transition->gpol) == true)) {
                         machine->flags |= SM_TREN;
 #if defined(CONFIG_SM_TRACER)
                         if (SM_IsTraceEnabled(machine) == true) {
@@ -195,33 +195,33 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE ev, void* event_data)
 #endif  // defined(CONFIG_SM_TRACER)
 // check if target state is different from start state
                         s1neqs2 = true;
-                        if (tr->s2 == machine->s1) {
+                        if (transition->s2 == machine->s1) {
                             s1neqs2 = false;
                         }
 // call of exit_action of s1, if there is a state change and if exit_action is defined for s1
                         if (s1neqs2 == true) {
-                            if (st->exit_action != NULL) {
-                                st->exit_action(machine);
+                            if (state->exit_action != NULL) {
+                                state->exit_action(machine);
                             }
                         }
 // action on transition
-                        if (tr->a != NULL) {
-                            tr->a(machine);
+                        if (transition->action != NULL) {
+                            transition->action(machine);
                         }
 #if defined(CONFIG_SM_TRACER)
                         if (SM_IsTraceEnabled(machine) == true) {
                             if (machine->trm != NULL) {
-                                machine->trm(machine,tr);
+                                machine->trm(machine,transition);
                             }
                         }
 #endif  // defined(CONFIG_SM_TRACER)
 // transition to s2
-                        machine->s1 = tr->s2;
+                        machine->s1 = transition->s2;
 // call of entry_action, if there is a state change and if entry_action is defined for s2
                         if (s1neqs2 == true) {
-                            st = &(machine->states[machine->s1]);
-                            if (st->entry_action != NULL) {
-                                 st->entry_action(machine);
+                            state = &(machine->states[machine->s1]);
+                            if (state->entry_action != NULL) {
+                                 state->entry_action(machine);
                             }
                         }
 #if defined(CONFIG_SM_TRACER)
@@ -243,7 +243,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE ev, void* event_data)
                                 machine->trc(machine,true);
                             }
                             if (machine->trm != NULL) {
-                                machine->trm(machine,tr);
+                                machine->trm(machine,transition);
                             }
                         }
 #endif  // defined(CONFIG_SM_TRACER)
@@ -410,25 +410,25 @@ void SM_Start(SM_MACHINE* machine, STATE_TYPE s1)
     }
 }
 
-// void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE ev)
+// void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE event)
 // Parameters:
 //   SM_MACHINE* machine - pointer to state machine
 //   STATE_TYPE s1 - start state
-//   EVENT_TYPE ev - event that triggers *machine in s1
+//   EVENT_TYPE event - event that triggers *machine in s1
 // Return: no
 // Description: SM_StartWithEvent puts the state machine pointed to by *machine in state s1, activates it
-// and then injects event ev. If s1 is not valid machine function does not have any effect. It the state machine
+// and then injects event event. If s1 is not valid machine function does not have any effect. It the state machine
 // has been already activated, machine function does not do anything.
 // After call of SM_StartWithEvent the caller should check if *machine is activated.
 
-void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE ev)
+void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE event)
 {
     if (machine != NULL) {
         if (SM_IsActivated(machine) == false) {
-            if (ev < evEVENTSNUMBER) {
+            if (event < evEVENTSNUMBER) {
                 if (SM_SetCurrentState(machine,s1) == true) {
                     SM_Activate(machine);
-                    sm_post_event(ev);
+                    sm_post_event(event);
                 }
             }
         }

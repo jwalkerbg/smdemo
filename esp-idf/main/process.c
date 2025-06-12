@@ -197,7 +197,7 @@ const char* const sP1_state_names[] = {
 static void SM_TraceMachine_ (SM_MACHINE* machine, const SM_TRANSITION* tr, const char* const * state_names)
 {
     ESP_LOGI(TAG,"ID=%04d, S1=%s, S2=%s, Event=%s, Action=%d %spermitted",
-        machine->id,state_names[machine->s1],state_names[tr->s2],event_names[tr->event],tr->ai,(machine->flags & SM_TREN) == 0 ? "not " : "");
+        machine->id,state_names[machine->s1],state_names[tr->s2],event_names[tr->event],tr->actidx,(machine->flags & SM_TREN) == 0 ? "not " : "");
 }
 
 static void SM_TraceMachine_1 (SM_MACHINE* machine, const SM_TRANSITION* tr)
@@ -232,7 +232,7 @@ void SM_TraceContext(SM_MACHINE* machine, uint8_t when)
 
 static void SM_LostEvent_(SM_MACHINE* machine, const char* const * state_names)
 {
-    EVENT_TYPE ev = machine->ev;
+    EVENT_TYPE ev = machine->event;
 
     if (ev < evEVENTSNUMBER) {
         ESP_LOGI(TAG,"ID=%04d: Lost ev: %s, state: %s",machine->id,event_names[ev],state_names[machine->s1]);

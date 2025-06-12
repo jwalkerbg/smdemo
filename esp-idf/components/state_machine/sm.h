@@ -66,8 +66,8 @@ typedef void (*SM_LOSTEVENT_TRACER)(SM_MACHINE* machine);
 struct sm_transition {
     EVENT_TYPE event;       // trigger event
     STATE_TYPE s2;          // destination state (index in an array)
-    SM_ACTION a;            // action (can be NULL: null action)
-    uint8_t ai;             // action index
+    SM_ACTION action;       // action (can be NULL: null action)
+    uint8_t actidx;         // action index
     SM_GUARD guard;         // guard: true: transition is permitted, false: transition is forbidden;
                             // (can be NULL, then transition is permitted
     uint8_t gpol;           // guard polarity: SM_GPOL_POSITIVE or SM_GPOL_NEGATIVE
@@ -75,7 +75,7 @@ struct sm_transition {
 
 // state
 struct sm_state {
-    const SM_TRANSITION* tr;    // array of exit transitions (can be NULL: no exit transition from the state)
+    const SM_TRANSITION* transitions;   // array of exit transitions (can be NULL: no exit transition from the state)
     uint32_t size;              // number of transitions in tr[]
     SM_ACTION entry_action;     // action on entering state, may be NULL
     SM_ACTION exit_action;      // action on exiting state, may be NULL
@@ -95,7 +95,7 @@ struct sm_machine {
     STATE_TYPE s1;              // current state fo state machine (index)
     uint8_t id;                 // state machine identifier (must be unique in the system)
     uint8_t flags;              // internal flags see masks for .flags above
-    EVENT_TYPE ev;              // active event been handled
+    EVENT_TYPE event;           // active event been handled
     void* event_data;           // pointer to event data (can be NULL)
     const SM_STATE* states;     // array of states, s1 is index for it
     uint32_t sizes;             // number of states in states[]

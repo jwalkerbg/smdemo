@@ -1,0 +1,8 @@
+menu "Smart Air Application configuration"
+    config SMDEMO_ESPIDF
+        bool "SM Demo Application"
+        default y
+        help
+        This option enables the SMDEMO Application.
+
+endmenu

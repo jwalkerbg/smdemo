@@ -1,0 +1,66 @@
+menu "State machine"
+
+    config STATE_MACHINE
+        bool "Enable State Machine support"
+        default y
+        help
+            Enabe support for State Machine Component.
+
+    if STATE_MACHINE
+
+        config SM_VERSION
+            string "State Machine Version"
+            default "2.0.0"
+            help
+                Define the version of the State Machine component.
+
+        config SM_EVENT_TYPE_DEFINED_IN_APPLICATION
+            bool "EVENT_TYPE and events defined in the application"
+            default n
+            help
+                If checked, this option disables EVENT_TYPE definition in State Machine module. Instead, the application must provide EVENT_TYPE definition.
+                Example: typedef enum { evNullEvent = 0, evEVENT1, .... evEVENTn, evEVENTSNUMBER } EVENT_TYPE; This makes the module partially not dependant on
+                the application.
+
+        config SM_MAX_STATE_MACHINES
+            int "Maximum state machines to be registered"
+            default 8
+            range 1 99
+            help
+                This parameter defines how many state machines may be registered to be run by SM module. In future releases, the module will accept as many state machines as they are registered.
+
+        config SM_EVENT_LOOP_QUEUE_SIZE
+            int "Size of the event loop queue"
+            default 12
+            range 1 99
+            help
+                This parameter defines the size of the event loop queue. The queue is used to store events that are not processed immediately. The size of the queue should be large enough to hold all events that may be generated in a short period of time.
+
+        config SM_EVENT_TASK_STACK_SIZE
+            int "Size of the event task stack"
+            default 5120
+            range 512 8192
+            help
+                This parameter defines the size of the stack used by the event task. The stack size should be large enough to hold all local variables and function calls that may be generated in a short period of time.
+
+        config SM_TRACER
+            bool "Enable state machine tracing functions"
+            default n
+            help
+                If checked, this option enables tracing of state machine work. This includes incoming events and state transitions.
+
+        config SM_TRACER_LOSTEVENT
+            bool "Enable tracing of events that did not triggered any transitions in state machine."
+            default n
+            help
+                If checked, this option enables tracing of the events that did not triggered any transition in state machine. This helps find missing (not defined) transitions.
+
+        config SM_TRACER_VERBOSE
+            bool "Enable verbose tracing"
+            default n
+            help
+                If enabled, this option activates verbose tracing. Instead events and states codes, their names are printed in logs. This way logs become more human friendly but use more flash memory.
+
+    endif
+
+endmenu

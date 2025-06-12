@@ -1,0 +1,15 @@
+# Default values that will be used when building project for first time.
+
+
+# Compiler options
+CONFIG_COMPILER_CXX_EXCEPTIONS=y
+
+# Get the project version from Kconfig
+CONFIG_APP_PROJECT_VER_FROM_CONFIG=y
+CONFIG_APP_PROJECT_VER="1.0.0"
+
+CONFIG_SM_TRACER=y
+SM_TRACER_VERBOSE=y
+CONFIG_SM_TRACER_LOSTEVENT=y
+
+

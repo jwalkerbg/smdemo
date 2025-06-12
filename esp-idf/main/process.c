@@ -222,7 +222,7 @@ static void SM_TraceMachine_1 (SM_MACHINE* machine, const SM_TRANSITION* tr)
 // 1. SM_TraceContext(sm,true)  -- information for s1
 // 2. SM_TraceMachine(sm,tr)    -- information for forbidden transition
 
-// SM_TraceContext may distiguish permitted from not permitted transition by looking
+// SM_TraceContext may distinguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
 void SM_TraceContext(SM_MACHINE* machine, uint8_t when)

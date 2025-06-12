@@ -30,6 +30,8 @@ void app_main(void)
         }
     }
 
+    ret = anvs_dump_appstore();
+
     if ((ret = register_state_machines()) != ESP_OK) {
         ESP_LOGI(TAG,"Not all state machines are registered : %d. This is implementation error",ret);
     }

@@ -38,5 +38,8 @@ device_modes_t get_opmode(void)
 
 esp_err_t read_opmode(void)
 {
-    return anvs_app_op_mode_get((uint16_t* )&operative_state.opmode);
+    portENTER_CRITICAL(&operative_state.mux);
+    esp_err_t ret = anvs_app_op_mode_get((uint16_t* )&operative_state.opmode);
+    portEXIT_CRITICAL(&operative_state.mux);
+    return ret;
 }

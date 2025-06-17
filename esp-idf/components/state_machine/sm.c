@@ -48,16 +48,16 @@ esp_err_t sm_create_event_loop(void)
     return rtn;
 }
 
-static uint32_t registred_machines = 0u;
+static uint32_t registered_machines = 0u;
 static SM_MACHINE* sm_list[SM_MAX_STATE_MACHINES] = { 0 };
 
 // esp_err_t SM_register_state_machine(SM_MACHINE* machine)
 // Input:
 //  machine - a pointer to a state machine
 // Output:
-//  ESP_OK - the mahine is registred successfully
+//  ESP_OK - the mahine is registered successfully
 //  ESP_ERR_INVALID_ARG - null pointer was given as an argument
-//  ESP_ERR_NO_MEM - no room for more state machines to be registred
+//  ESP_ERR_NO_MEM - no room for more state machines to be registered
 // Desription: This function registers state machines to be run. It can register maximum SM_MAX_STATE_MACHINES.
 // If needed, SM_MAX_STATE_MACHINES can be adjusted in app configuration. There is no deregistration provided.
 esp_err_t SM_register_state_machine(SM_MACHINE* machine)
@@ -65,10 +65,10 @@ esp_err_t SM_register_state_machine(SM_MACHINE* machine)
     if (machine == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
-    if (registred_machines >= SM_MAX_STATE_MACHINES) {
+    if (registered_machines >= SM_MAX_STATE_MACHINES) {
         return ESP_ERR_NO_MEM;
     }
-    sm_list[registred_machines++] = machine;
+    sm_list[registered_machines++] = machine;
     return ESP_OK;
 }
 
@@ -82,7 +82,7 @@ static void sm_event_handler(void* event_handler_arg, esp_event_base_t event_bas
 {
     if (event_id != evNullEvent) {
         // Send events to state machines.
-        for (uint32_t i = 0; i < registred_machines; i++) {
+        for (uint32_t i = 0; i < registered_machines; i++) {
             SM_Machine(sm_list[i],event_id, event_data);
         }
     }

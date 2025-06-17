@@ -107,7 +107,7 @@ esp_err_t sm_post_event_with_data(EVENT_TYPE event, void* event_data, size_t dat
 }
 
 // void sm_post_event(EVENT_TYPE event)
-// Input: event to be posten to the sm event loop
+// Input: event to be posted to the sm event loop
 // Output: error code from esp_event_post_to()
 // Description: This function posts an event to sm_loop_handle. This event then triggers a call to sm_event_handler()
 

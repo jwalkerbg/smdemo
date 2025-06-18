@@ -7,6 +7,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include "esp_err.h"
 
 // event loop definitions and declarations
 

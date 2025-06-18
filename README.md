@@ -30,6 +30,8 @@
   - [SM\_IsActivated](#sm_isactivated)
   - [SM\_TraceOn](#sm_traceon)
   - [SM\_TraceOff](#sm_traceoff)
+  - [SM\_TraceLostEventOn](#sm_tracelosteventon)
+  - [SM\_TraceLostEventOff](#sm_tracelosteventoff)
   - [SM\_SetTracers](#sm_settracers)
   - [SM\_IsTraceEnabled](#sm_istraceenabled)
 
@@ -129,7 +131,7 @@ typedef struct sm_state SM_STATE;
 The comments explain what the members are. Transitions are explained below. Here are some words about actions. The type ```SM_ACTION``` is defined as follows:
 
 ```
-typedef void (*SM_ACTION)(SM_MACHINE* this);
+typedef void (*SM_ACTION)(SM_MACHINE* machine);
 ```
 
 This is a pointer to a C function returning nothing and accepting a pointer to the state machine object. ```entry_action``` is executed when FSM is entering a state nevertheless which was previous state. Par example this state may contain code to light the lamps in the room. It is not important where was FSM before. The lamps must be lightened on entering the room. Similarly, exit_action may have code to turn off the lights on exitting the room, and it is not important where (in which state) FSM will go.
@@ -194,7 +196,7 @@ The comments in the structure describe the fields.
 
 ## Context
 
-The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contexts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* this``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type.
+The context pointer ```ctx``` is an optional. If not used it shall to be ```NULL```. It may be used to point to an application defined structure that contains data used by the actions. This contexts can be useful when a given state machine has several instances and every instance has its own data. Actions can access the context via their parameter ```SM_MACHINE* machine``` pointer: ```this->ctx```. Of cource, ```(this->ctx)``` has to be casted to some application defined type.
 
 # Trace
 
@@ -206,7 +208,7 @@ FSM must be given pointers to the tracers befor tracing to take effect. This is 
 
 ## Trace state machine
 
-State machine tracer produces output about FSM transitions. It is of type ```SM_TRANSITION_TRACER```. It receives two parameters - ```SM_MACHINE* this``` and a pointer to the current transition being executed. The tracer is executed after the current state is exited, transition actrion is executed and before the new state is entered. See the demo project for a sample of transition tracer. Example output of such tracer could be:
+State machine tracer produces output about FSM transitions. It is of type ```SM_TRANSITION_TRACER```. It receives two parameters - ```SM_MACHINE* machine``` and a pointer to the current transition being executed. The tracer is executed after the current state is exited, transition actrion is executed and before the new state is entered. See the demo project for a sample of transition tracer. Example output of such tracer could be:
 
 ```
 ID=0001, S1=sP1_F4, S2=sP1_F2, Event=evBTN3Released, Action=P1a3 permitted
@@ -237,18 +239,18 @@ It may be useful to trace not all lost events but events of interest only.
 
 # Implementation. Functions.
 
-All functions receive a pointer to FSM object of type ```SM_MACHINE* this```. This makes FSM module object oriented.
+All functions receive a pointer to FSM object of type ```SM_MACHINE* machine```. This makes FSM module object oriented.
 
 ## SM_Machine
 
 ```c
-void SM_Machine (SM_MACHINE* this, EVENT_TYPE ev);
+void SM_Machine (SM_MACHINE* machine, EVENT_TYPE ev);
 ```
 
 ## SM_Initialize
 
 ```c
-void SM_Initialize (SM_MACHINE* this, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
+void SM_Initialize (SM_MACHINE* machine, STATE_TYPE s1, int id, const SM_STATE* states, int sizes, void* ctx);
 ```
 
 ```SM_Initialize``` initialises FSM object. It must be the first function that is executed with FSM.
@@ -264,7 +266,7 @@ Parameters:
 ## SM_GetID
 
 ```c
-int SM_GetID (SM_MACHINE* this);
+int SM_GetID (SM_MACHINE* machine);
 ```
 
 ```SM_GetID``` return FSM ```id``` property. This can be used par example by tracers.
@@ -272,7 +274,7 @@ int SM_GetID (SM_MACHINE* this);
 ## SM_GetCurrentState
 
 ```c
-STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
+STATE_TYPE SM_GetCurrentState (SM_MACHINE* machine);
 ```
 
 ```SM_GetCurrentState``` return the current state of FSM. This function may be used when the current state must be known (in actions). Normally the actions should not be interested of which is current state. The need for knowing the current state may indicate bad FSM design.
@@ -280,7 +282,7 @@ STATE_TYPE SM_GetCurrentState (SM_MACHINE* this);
 ## SM_SetCurrentState
 
 ```c
-bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
+bool SM_SetCurrentState (SM_MACHINE* machine, STATE_TYPE s1);
 ```
 
 ```SM_SetCurrentState``` sets current state of FSM. This function is normaly not used. FSM must follow its transitions to change its states. However non-standard implementations may use it to change the state. This function is not recommended to be used.
@@ -288,7 +290,7 @@ bool SM_SetCurrentState (SM_MACHINE* this, STATE_TYPE s1);
 ## SM_GetStateCount
 
 ```c
-int SM_GetStateCount (SM_MACHINE* this);
+int SM_GetStateCount (SM_MACHINE* machine);
 ```
 
 ```SM_GetStateCount``` returns the number of the states of FSM.
@@ -296,7 +298,7 @@ int SM_GetStateCount (SM_MACHINE* this);
 ## SM_SetContext
 
 ```c
-void SM_SetContext (SM_MACHINE* this, void* ctx);
+void SM_SetContext (SM_MACHINE* machine, void* ctx);
 ```
 
 ```SM_SetContext``` sets the context of FSM. ```ctx``` becomes value of ```this->ctx```. ```ctx``` may be ```NULL```.
@@ -304,7 +306,7 @@ void SM_SetContext (SM_MACHINE* this, void* ctx);
 ## SM_GetContext
 
 ```c
-void* SM_GetContext (SM_MACHINE* this);
+void* SM_GetContext (SM_MACHINE* machine);
 ```
 
 ```SM_GetContext``` returns a pointer to the context of FSM. This is the value of ```this->ctx```.
@@ -312,7 +314,7 @@ void* SM_GetContext (SM_MACHINE* this);
 ## SM_Start
 
 ```c
-void SM_Start (SM_MACHINE* this, STATE_TYPE s1);
+void SM_Start (SM_MACHINE* machine, STATE_TYPE s1);
 ```
 
 ```SM_Start``` activates FSM pointed by ```this``` and sets its state to ```s1```. If FSM is already active, this function does nothing. FSM becomes ready to waits for events.
@@ -320,7 +322,7 @@ void SM_Start (SM_MACHINE* this, STATE_TYPE s1);
 ## SM_StartWithEvent
 
 ```c
-void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev);
+void SM_StartWithEvent (SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE ev);
 ```
 
 ```SM_StartWithEvent``` activates FSM pointed by ```this```, sets its state to ```s1``` and pushes into event buffer the event ```ev```. If FSM is already active, this function does nothing. Pushing an event makes FSM begin working immediately.
@@ -328,7 +330,7 @@ void SM_StartWithEvent (SM_MACHINE* this, STATE_TYPE s1, EVENT_TYPE ev);
 ## SM_Activate
 
 ```c
-void SM_Activate (SM_MACHINE* this);
+void SM_Activate (SM_MACHINE* machine);
 ```
 
 ```SM_Activate``` enables FSM pointed to by ```this```.
@@ -336,7 +338,7 @@ void SM_Activate (SM_MACHINE* this);
 ## SM_Deactivate
 
 ```c
-void SM_Deactivate (SM_MACHINE* this);
+void SM_Deactivate (SM_MACHINE* machine);
 ```
 
 ```SM_Deactivate``` disables FSM pointed to by ```this```.
@@ -344,7 +346,7 @@ void SM_Deactivate (SM_MACHINE* this);
 ## SM_IsActivated
 
 ```c
-bool SM_IsActivated (SM_MACHINE* this);
+bool SM_IsActivated (SM_MACHINE* machine);
 ```
 
 ```SM_IsActivated``` returns the state of FSM: ```true``` if FSM is active (working) and ```false``` otherwise.
@@ -352,7 +354,7 @@ bool SM_IsActivated (SM_MACHINE* this);
 ## SM_TraceOn
 
 ```c
-void SM_TraceOn (SM_MACHINE* this);
+void SM_TraceOn (SM_MACHINE* machine);
 ```
 
 ```SM_TraceOn``` enables trace function.
@@ -360,15 +362,31 @@ void SM_TraceOn (SM_MACHINE* this);
 ## SM_TraceOff
 
 ```c
-void SM_TraceOff (SM_MACHINE* this);
+void SM_TraceOff (SM_MACHINE* machine);
 ```
 
 ```SM_TraceOff``` disables trace function.
 
+## SM_TraceLostEventOn
+
+```c
+void SM_TraceLostEventOn(SM_MACHINE* machine);
+```
+
+```SM_TraceLostEventOn``` enables tracing of lost events for given state machine.
+
+## SM_TraceLostEventOff
+
+```c
+void SM_TraceLostEventOff(SM_MACHINE* machine);
+```
+
+```SM_TraceLostEventOff``` disables tracing of lost events for given state machine.
+
 ## SM_SetTracers
 
 ```c
-void SM_SetTracers(SM_MACHINE* this, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
+void SM_SetTracers(SM_MACHINE* machine, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
 ```
 
 ```SM_SetTracers``` sets tracers for FSM pointed to by ``this```. These are
@@ -381,7 +399,7 @@ Each of these parameters can be ```NULL``.
 ## SM_IsTraceEnabled
 
 ```c
-bool SM_IsTraceEnabled (SM_MACHINE* this);
+bool SM_IsTraceEnabled (SM_MACHINE* machine);
 ```
 
 ```SM_IsTraceEnabled``` returns the state of trace: ```true``` if trace enabled and ```false``` otherwise.

@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
-#include "esp_event.h"
+//#include "esp_event.h"
 
 // event loop definitions and declarations
 
@@ -22,13 +22,11 @@ extern "C" {
 #define SM_EVENT_TASK_PRIORITY      (1)
 #define SM_EVENT_TASK_STACK_SIZE    (CONFIG_SM_EVENT_TASK_STACK_SIZE)
 
-ESP_EVENT_DECLARE_BASE(SM_EVENTS);
-
 #if defined(SM_EVENT_TYPE_DEFINED_IN_APPLICATION)
 #include "events.h"
 #else
 
-// TODO: Add real events here. Do nit remove
+// TODO: Add real events here. Do not remove evNullEvent and evEVENTSNUMBER
 typedef enum {
     evNullEvent,
 
@@ -85,7 +83,7 @@ struct sm_state {
 
 // masks for .flags
 #define SM_ACTIVE   (0b00000001u)   // the state machine is active (accepts events)
-#define SM_TREN     (0b00000010u)   // true: found transition is permitted by tr->guard
+#define SM_TREN     (0b00000010u)   // true: found transition is permitted by transition->guard
 #define SM_TRACE    (0b10000000u)   // tracing, if compiled, is enabled
 #define SM_TRACE_LE (0b01000000u)   // tracing lost events, if compiled, is enabled
 

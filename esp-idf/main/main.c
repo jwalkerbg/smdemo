@@ -1,5 +1,7 @@
 // main.c
 
+#include "sdkconfig.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "sdkconfig.h"

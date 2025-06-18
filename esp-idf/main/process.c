@@ -1,3 +1,4 @@
+#include "sdkconfig.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -137,6 +138,8 @@ void P1_start(void)
     if (SM_IsActivated(&sm_P1) != 0) {
         return;
     }
+
+    ESP_LOGI(TAG,"Starting P1");
 
     SM_Initialize(&sm_P1, sP1_START, P1_ID, P1_States, ARRAY_SIZE(P1_States),&P1_ctx);
     SM_SetTracers(&sm_P1,SM_TraceMachine_1, SM_TraceContext, SM_LostEvent_1);

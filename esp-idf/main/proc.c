@@ -1,13 +1,16 @@
 // proc.c
+#include "sdkconfig.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
+
 #include "freertos/FreeRTOS.h"
 #include "esp_log.h"
-#include "anvs.h"
+
 #include "commondefs.h"
+#include "anvs.h"
 
 typedef struct {
     device_modes_t opmode;  // actual operative mode

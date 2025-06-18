@@ -1,9 +1,12 @@
 // $Id$
 
+#include "sdkconfig.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_event.h"
 #include "esp_log.h"
+
 #include "sm.h"
 
 static const char SM_TAG[] = "SM";
@@ -302,7 +305,7 @@ void SM_Initialize(SM_MACHINE* machine, STATE_TYPE s1, uint8_t id, const SM_STAT
         SM_SetContext(machine,ctx);
         SM_ClearFlags(machine);
 
-#if defined(SM_TRCONFIG_SM_TRACERACER)
+#if defined(CONFIG_SM_TRACER)
         machine->trm = NULL;
         machine->trc = NULL;
         machine->trle = NULL;

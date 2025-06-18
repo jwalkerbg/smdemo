@@ -7,13 +7,10 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
-//#include "esp_event.h"
 
 // event loop definitions and declarations
 
-#if CONFIG_SM_EVENT_TYPE_DEFINED_IN_APPLICATION==1
-#define SM_EVENT_TYPE_DEFINED_IN_APPLICATION
-#endif
+
 
 #define SM_MAX_STATE_MACHINES   (CONFIG_SM_MAX_STATE_MACHINES)
 
@@ -22,7 +19,7 @@ extern "C" {
 #define SM_EVENT_TASK_PRIORITY      (1)
 #define SM_EVENT_TASK_STACK_SIZE    (CONFIG_SM_EVENT_TASK_STACK_SIZE)
 
-#if defined(SM_EVENT_TYPE_DEFINED_IN_APPLICATION)
+#if defined(CONFIG_SM_EVENT_TYPE_DEFINED_IN_APPLICATION)
 #include "events.h"
 #else
 
@@ -36,7 +33,7 @@ typedef enum {
     evEVENTSNUMBER
 } EVENT_TYPE;
 
-#endif  // !defined(SM_EVENT_TYPE_DEFINED_IN_APPLICATION)
+#endif  // !defined(CONFIG_SM_EVENT_TYPE_DEFINED_IN_APPLICATION)
 
 esp_err_t sm_create_event_loop(void);
 esp_err_t sm_post_event(EVENT_TYPE event);

@@ -240,6 +240,9 @@ static void SM_LostEvent_(SM_MACHINE* machine, const char* const * state_names)
     if (ev < evEVENTSNUMBER) {
         ESP_LOGI(TAG,"ID=%04d: Lost ev: %s, state: %s",machine->id,event_names[ev],state_names[machine->s1]);
     }
+    else {
+        ESP_LOGW(TAG,"ID=%04d: Unknown lost event with ID %d, state: %s",machine->id,ev,state_names[machine->s1]);
+    }
 }
 
 static void SM_LostEvent_1(SM_MACHINE* machine)

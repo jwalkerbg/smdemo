@@ -15,7 +15,7 @@
 #include "commondefs.h"
 #include "anvs.h"
 
-// static const char TAG[] = "proc";
+static const char TAG[] = "proc";
 
 typedef struct {
     device_modes_t opmode;  // actual operative mode
@@ -67,6 +67,11 @@ button_gpio_config_t gpio_cfg = {
 
 button_handle_t btn;
 
+static void button_event_cb(void *arg, void *data)
+{
+    button_event_t event = iot_button_get_event(arg);
+    ESP_LOGI(TAG, "%s", iot_button_get_event_str(event));
+}
 
 void init_button(void)
 {

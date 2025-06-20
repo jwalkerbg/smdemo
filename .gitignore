@@ -59,3 +59,5 @@ dkms.conf
 /build-smdemo-Desktop_Qt_6_4_0_MinGW_64_bit-RelWithDebInfo
 /esp-idf/build
 /esp-idf/.cache
+.cache
+managed_components

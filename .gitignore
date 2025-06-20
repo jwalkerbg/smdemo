@@ -52,6 +52,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+/build
 /build-smdemo-Desktop_Qt_6_4_0_MinGW_64_bit-Debug
 /build-smdemo-Desktop_Qt_6_4_0_MinGW_64_bit-MinSizeRel
 /build-smdemo-Desktop_Qt_6_4_0_MinGW_64_bit-Release

@@ -11,9 +11,11 @@
 #include "driver/gpio.h"
 #include "iot_button.h"
 #include "button_gpio.h"
+#include "esp_timer.h"
 
 #include "commondefs.h"
 #include "anvs.h"
+#include "sm.h"
 
 static const char TAG[] = "proc";
 
@@ -24,7 +26,7 @@ typedef struct {
 } operative_state_t;
 
 static operative_state_t operative_state = {
-    .opmode = OP_MODE_IDLE,
+    .opmode = OP_MODE_STANDBY,
     .mux = portMUX_INITIALIZER_UNLOCKED
  };
 
@@ -52,18 +54,14 @@ esp_err_t read_opmode(void)
     return ret;
 }
 
+// INPUT DEVICE
+
 // button handling
 
 #define BUTTON_GPIO 12
 #define BUTTON_ACTIVE_LEVEL 0
 
-button_config_t btn_cfg = {0};
-
-button_gpio_config_t gpio_cfg = {
-    .gpio_num = BUTTON_GPIO,
-    .active_level = BUTTON_ACTIVE_LEVEL,
-    .enable_power_save = false,
-};
+#define LED_GPIO 13
 
 button_handle_t btn;
 
@@ -71,11 +69,77 @@ static void button_event_cb(void *arg, void *data)
 {
     button_event_t event = iot_button_get_event(arg);
     ESP_LOGI(TAG, "%s", iot_button_get_event_str(event));
+    sm_post_event(evButtonSingleClick);
 }
 
 void init_button(void)
 {
+    button_config_t btn_cfg = {0};
+
+    button_gpio_config_t gpio_cfg = {
+        .gpio_num = BUTTON_GPIO,
+        .active_level = BUTTON_ACTIVE_LEVEL,
+        .enable_power_save = false,
+    };
+
     esp_err_t ret = iot_button_new_gpio_device(&btn_cfg, &gpio_cfg, &btn);
 
     iot_button_register_cb(btn, BUTTON_SINGLE_CLICK, NULL, button_event_cb, NULL);
+}
+
+// OUTPUT DEVICE
+
+// led handling
+
+// Blinking intervals (full period in ms)
+static const int blink_intervals[] = {100, 500, 1000, 2000, 2500};  // 10Hz to 0.4Hz
+
+static volatile int current_blink_index = 0;
+static esp_timer_handle_t led_timer = NULL;
+static bool led_state = false;
+
+
+// LED toggle callback (called from esp_timer)
+static void led_timer_callback(void* arg)
+{
+    led_state = !led_state;
+    gpio_set_level(LED_GPIO, led_state);
+}
+
+void set_blink_period(int index)
+{
+    if (index < 0 || index >= ARRAY_SIZE(blink_intervals)) {
+        ESP_LOGE(TAG, "Invalid blink index: %d", index);
+        return;
+    }
+
+    current_blink_index = index;
+
+    if (led_timer) {
+        esp_timer_stop(led_timer);
+        esp_timer_start_periodic(led_timer, (blink_intervals[current_blink_index] / 2) * 1000);
+    }
+}
+
+void init_led_blinking(void)
+{
+    gpio_reset_pin(LED_GPIO);
+    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(LED_GPIO, 0);  // Start with LED off
+
+    esp_timer_create_args_t timer_args = {
+        .callback = &led_timer_callback,
+        .name = "led_blink_timer",
+        .arg = NULL,
+        .dispatch_method = ESP_TIMER_TASK,
+        .skip_unhandled_events = false,
+    };
+
+    esp_err_t ret = esp_timer_create(&timer_args, &led_timer);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to create LED timer: %s", esp_err_to_name(ret));
+        return;
+    }
+
+    set_blink_period(0);  // Start with the first blink interval
 }

@@ -10,9 +10,11 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 
+#include "commondefs.h"
 #include "sm.h"
 #include "process.h"
 #include "anvs.h"
+#include "proc.h"
 
 static char TAG[] = "APP";
 
@@ -33,6 +35,9 @@ void app_main(void)
     }
 
     ret = anvs_dump_appstore();
+
+    init_button();
+    init_led_blinking();
 
     if ((ret = register_state_machines()) != ESP_OK) {
         ESP_LOGI(TAG,"Not all state machines are registered : %d. This is implementation error",ret);

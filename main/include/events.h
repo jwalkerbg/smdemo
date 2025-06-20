@@ -9,7 +9,8 @@ extern "C" {
 #define EVENT_LIST \
     X(evNullEvent) \
     X(evP1Start) \
-    X(evP1Trigger1) X(evP1Trigger2) X(evP1Trigger3) X(evP1Trigger4) \
+    X(evP1Trigger1) X(evP1Trigger2) X(evP1Trigger3) X(evP1Trigger4) X(evP1Trigger5) \
+    X(evButtonSingleClick)
 
     // Generate the enum automatically
 typedef enum {

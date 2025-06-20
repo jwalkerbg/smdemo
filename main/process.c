@@ -1,3 +1,4 @@
+#include "include/events.h"
 #include "sdkconfig.h"
 
 #include <stdbool.h>
@@ -27,6 +28,7 @@ static void P1a1(SM_MACHINE* machine);
 static void P1a2(SM_MACHINE* machine);
 static void P1a3(SM_MACHINE* machine);
 static void P1a4(SM_MACHINE* machine);
+static void P1a5(SM_MACHINE* machine);
 
 static void P1a0(SM_MACHINE* machine)
 {
@@ -36,7 +38,7 @@ static void P1a0(SM_MACHINE* machine)
     device_modes_t ops = get_opmode();
 
     switch (ops) {
-        case OP_MODE_IDLE:
+        case OP_MODE_STANDBY:
             sm_post_event(evP1Trigger1);
             break;
         case OP_MODE_AUTO:
@@ -48,6 +50,9 @@ static void P1a0(SM_MACHINE* machine)
         case OP_MODE_MANUAL:
             sm_post_event(evP1Trigger4);
             break;
+        case OP_MODE_TEST:
+            sm_post_event(evP1Trigger5);
+            break;
         default:
             break;
     }
@@ -57,25 +62,35 @@ static void P1a0(SM_MACHINE* machine)
 static void P1a1(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a1 executed");
-    sm_post_event(evP1Trigger3);
+    set_blink_period(0);  // Set blink period to 5Hz
 }
 
 // going to sP1_AUTO
 static void P1a2(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a2 executed");
+    set_blink_period(1);  // Set blink period to 2Hz
 }
 
 // going to sP1_MANUAL
 static void P1a3(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a3 executed");
+    set_blink_period(2);  // Set blink period to 1Hz
 }
 
 // going to sP1_TEST
 static void P1a4(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a4 executed");
+    set_blink_period(3);  // Set blink period to 0.5Hz
+}
+
+// going to sP1_TEST
+static void P1a5(SM_MACHINE* machine)
+{
+    ESP_LOGI(TAG,"P1a5 executed");
+    set_blink_period(4);  // Set blink period to 0.4Hz
 }
 
 const SM_TRANSITION sP1_START_transitions[] = {
@@ -90,19 +105,23 @@ const SM_TRANSITION sP1_RESOLVE_transitions[] = {
 };
 
 const SM_TRANSITION sP1_STANDBY_transitions[] = {
-    { 0 }
+    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
 };
 
 const SM_TRANSITION sP1_AUTO_transitions[] = {
-    { 0 }
+    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
+};
+
+const SM_TRANSITION sP1_AUTO_NIGHT_transitions[] = {
+    { evButtonSingleClick, (STATE_TYPE)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
 };
 
 const SM_TRANSITION sP1_MANUAL_transitions[] = {
-    { 0 }
+    { evButtonSingleClick, (STATE_TYPE)sP1_TEST, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
 };
 
 const SM_TRANSITION sP1_TEST_transitions[] = {
-    { 0 }
+    { evButtonSingleClick, (STATE_TYPE)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
 };
 
 // sm_P1 state machine definition
@@ -111,6 +130,7 @@ const SM_STATE P1_States[sP1_STATE_COUNT] = {
     { sP1_RESOLVE_transitions, ARRAY_SIZE(sP1_RESOLVE_transitions), NULL, NULL},
     { sP1_STANDBY_transitions, ARRAY_SIZE(sP1_STANDBY_transitions), NULL, NULL},
     { sP1_AUTO_transitions, ARRAY_SIZE(sP1_AUTO_transitions), NULL, NULL},
+    { sP1_AUTO_NIGHT_transitions, ARRAY_SIZE(sP1_AUTO_NIGHT_transitions), NULL, NULL},
     { sP1_MANUAL_transitions, ARRAY_SIZE(sP1_MANUAL_transitions), NULL, NULL},
     { sP1_TEST_transitions, ARRAY_SIZE(sP1_TEST_transitions), NULL, NULL},
 };

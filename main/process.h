@@ -18,7 +18,7 @@ extern "C" {    // allow use with C++ compilers
 #define P1_ID   (1)
 #define P1_STATES \
     X(sP1_START) X(sP1_RESOLVE) \
-    X(sP1_STANDBY) X(sP1_AUTO) X(sP1_MANUAL) X(sP1_TESTMODE)
+    X(sP1_STANDBY) X(sP1_AUTO) X(sP1_AUTO_NIGHT) X(sP1_MANUAL) X(sP1_TEST)
 
 typedef enum sP1_states {
     #define X(name) name,

@@ -170,7 +170,7 @@ esp_err_t anvs_init_appstore(void)
     nvs_set_u16(app_nvs_handle,app_storage_marker_key,marker);
 
     // operative mode
-    uint16_t op_mode = OP_MODE_IDLE;
+    uint16_t op_mode = OP_MODE_STANDBY;
     ret = nvs_set_u16(app_nvs_handle,app_operative_mode_key,op_mode);
 
     ret = anvs_wait_commit();

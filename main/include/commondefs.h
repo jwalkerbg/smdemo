@@ -20,7 +20,7 @@ extern "C" {    // allow use with C++ compilers
 #define WHO_CODE    (0x5A)
 
 typedef enum {
-    OP_MODE_IDLE = 0,
+    OP_MODE_STANDBY = 0,
     OP_MODE_AUTO,
     OP_MODE_NIGHT,
     OP_MODE_MANUAL,

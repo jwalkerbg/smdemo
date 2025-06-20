@@ -10,6 +10,7 @@
 #include "commondefs.h"
 #include "proc.h"
 #include "process.h"
+#include "anvs.h"
 
 static const char TAG[] = "PROCESS";
 
@@ -20,7 +21,7 @@ void SM_TraceContext(SM_MACHINE* machine, uint8_t when);
 // sm_P1 Main process ================================================
 
 enum action_ids_P1 {
-    iP1a0 = 0, iP1a1, iP1a2, iP1a3, iP1a4, iP1a5, iP1a6, iP1a7, iP1a8, iP1a9, iP1a10, iP1a11
+    iP1a0 = 0, iP1a1, iP1a2, iP1a3, iP1a4, iP1a5, iP1a6, iP1a7, iP1a8, iP1a9, iP1a10
 };
 
 static void P1a0(SM_MACHINE* machine);
@@ -29,6 +30,11 @@ static void P1a2(SM_MACHINE* machine);
 static void P1a3(SM_MACHINE* machine);
 static void P1a4(SM_MACHINE* machine);
 static void P1a5(SM_MACHINE* machine);
+static void P1a6(SM_MACHINE* machine);
+static void P1a7(SM_MACHINE* machine);
+static void P1a8(SM_MACHINE* machine);
+static void P1a9(SM_MACHINE* machine);
+static void P1a10(SM_MACHINE* machine);
 
 static void P1a0(SM_MACHINE* machine)
 {
@@ -44,7 +50,7 @@ static void P1a0(SM_MACHINE* machine)
         case OP_MODE_AUTO:
             sm_post_event(evP1Trigger2);
             break;
-        case OP_MODE_NIGHT:
+        case OP_MODE_AUTO_NIGHT:
             sm_post_event(evP1Trigger3);
             break;
         case OP_MODE_MANUAL:
@@ -62,7 +68,7 @@ static void P1a0(SM_MACHINE* machine)
 static void P1a1(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a1 executed");
-    set_blink_period(0);  // Set blink period to 5Hz
+    set_blink_period(0);  // Set blink period to 10Hz
 }
 
 // going to sP1_AUTO
@@ -72,14 +78,14 @@ static void P1a2(SM_MACHINE* machine)
     set_blink_period(1);  // Set blink period to 2Hz
 }
 
-// going to sP1_MANUAL
+// going to sP1_AUTO_NIGHT
 static void P1a3(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a3 executed");
     set_blink_period(2);  // Set blink period to 1Hz
 }
 
-// going to sP1_TEST
+// going to sP1_MANUAL
 static void P1a4(SM_MACHINE* machine)
 {
     ESP_LOGI(TAG,"P1a4 executed");
@@ -93,39 +99,81 @@ static void P1a5(SM_MACHINE* machine)
     set_blink_period(4);  // Set blink period to 0.4Hz
 }
 
-const SM_TRANSITION sP1_START_transitions[] = {
+static void P1a6(SM_MACHINE* machine)
+{
+    ESP_LOGI(TAG,"P1a6 executed");
+    set_blink_period(0);  // Set blink period to 10Hz
+    set_opmode(OP_MODE_STANDBY);
+    anvs_app_op_mode_set(OP_MODE_STANDBY);
+}
+
+static void P1a7(SM_MACHINE* machine)
+{
+    ESP_LOGI(TAG,"P1a7 executed");
+    set_blink_period(1);  // Set blink period to 2Hz
+    set_opmode(OP_MODE_AUTO);
+    anvs_app_op_mode_set(OP_MODE_AUTO);
+
+}
+
+static void P1a8(SM_MACHINE* machine)
+{
+    ESP_LOGI(TAG,"P1a8 executed");
+    set_blink_period(2);  // Set blink period to 1Hz
+    set_opmode(OP_MODE_AUTO_NIGHT);
+    anvs_app_op_mode_set(OP_MODE_AUTO_NIGHT);
+}
+
+static void P1a9(SM_MACHINE* machine)
+{
+    ESP_LOGI(TAG,"P1a9 executed");
+    set_blink_period(3);  // Set blink period to 0.5Hz
+    set_opmode(OP_MODE_MANUAL);
+    anvs_app_op_mode_set(OP_MODE_MANUAL);
+}
+
+static void P1a10(SM_MACHINE* machine)
+{
+    ESP_LOGI(TAG,"P1a10 executed");
+    set_blink_period(4);  // Set blink period to 0.4Hz
+    set_opmode(OP_MODE_TEST);
+    anvs_app_op_mode_set(OP_MODE_TEST);
+}
+
+static const SM_TRANSITION sP1_START_transitions[] = {
     { evP1Start, (STATE_TYPE)sP1_RESOLVE, P1a0, iP1a0, NULL, SM_GPOL_POSITIVE },
 };
 
-const SM_TRANSITION sP1_RESOLVE_transitions[] = {
+static const SM_TRANSITION sP1_RESOLVE_transitions[] = {
     { evP1Trigger1, (STATE_TYPE)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
     { evP1Trigger2, (STATE_TYPE)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger3, (STATE_TYPE)sP1_MANUAL, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger3, (STATE_TYPE)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
     { evP1Trigger4, (STATE_TYPE)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger5, (STATE_TYPE)sP1_MANUAL, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
 };
 
-const SM_TRANSITION sP1_STANDBY_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
+static const SM_TRANSITION sP1_STANDBY_transitions[] = {
+    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO, P1a7, iP1a7, NULL, SM_GPOL_POSITIVE },
 };
 
-const SM_TRANSITION sP1_AUTO_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
+static const SM_TRANSITION sP1_AUTO_transitions[] = {
+    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO_NIGHT, P1a8, iP1a8, NULL, SM_GPOL_POSITIVE },
 };
 
-const SM_TRANSITION sP1_AUTO_NIGHT_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
+static const SM_TRANSITION sP1_AUTO_NIGHT_transitions[] = {
+    { evButtonSingleClick, (STATE_TYPE)sP1_MANUAL, P1a9, iP1a9, NULL, SM_GPOL_POSITIVE },
 };
 
-const SM_TRANSITION sP1_MANUAL_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_TEST, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
+static const SM_TRANSITION sP1_MANUAL_transitions[] = {
+    { evButtonSingleClick, (STATE_TYPE)sP1_TEST, P1a10, iP1a10, NULL, SM_GPOL_POSITIVE },
 };
 
-const SM_TRANSITION sP1_TEST_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
+static const SM_TRANSITION sP1_TEST_transitions[] = {
+    { evButtonSingleClick, (STATE_TYPE)sP1_STANDBY, P1a6, iP1a6, NULL, SM_GPOL_POSITIVE },
 };
 
 // sm_P1 state machine definition
-const SM_STATE P1_States[sP1_STATE_COUNT] = {
+static const SM_STATE P1_States[sP1_STATE_COUNT] = {
     { sP1_START_transitions, ARRAY_SIZE(sP1_START_transitions), NULL, NULL },
     { sP1_RESOLVE_transitions, ARRAY_SIZE(sP1_RESOLVE_transitions), NULL, NULL},
     { sP1_STANDBY_transitions, ARRAY_SIZE(sP1_STANDBY_transitions), NULL, NULL},

@@ -22,7 +22,7 @@ extern "C" {    // allow use with C++ compilers
 typedef enum {
     OP_MODE_STANDBY = 0,
     OP_MODE_AUTO,
-    OP_MODE_NIGHT,
+    OP_MODE_AUTO_NIGHT,
     OP_MODE_MANUAL,
     OP_MODE_TEST,
 

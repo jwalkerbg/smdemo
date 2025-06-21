@@ -10,6 +10,8 @@ extern "C" {    // allow use with C++ compilers
 #include <stdbool.h>
 #include <esp_err.h>
 
+#include "commondefs.h"
+
 void set_opmode(device_modes_t mode);
 device_modes_t get_opmode(void);
 esp_err_t read_opmode(void);

@@ -3,9 +3,9 @@
 
 # Finite State Machine - Component & Example
 
-Finite State Machine component offers FSM driver which can run state machines organized as linked tables. No `switch` operators are used. This approach goo and disciplined implementation with no way to escape from the theoretical definition.
+Finite State Machine component offers FSM driver which can run state machines organized as linked tables. No `switch` operators are used. This approach is good and disciplined implementation with no way to escape from the theoretical definition.
 
-Theoretically FSM is an automat of Mealy: FSM is in one of finte number states, reacts on incoming event by executing a transition and issuing output (transition action). Transitions can have `guards` and states can have `exit` and `entry` actions. This approach offers well organized tracing. The standard `esp_log` module is used for logging. The work of FSM can be seen in real time.
+Theoretically FSM is an automat of Mealy: FSM is in one of finite number states, reacts on incoming event by executing a transition and issuing output (transition action). Transitions can have `guards` and states can have `exit` and `entry` actions. This approach offers well organized tracing. The standard `esp_log` module is used for logging. The work of FSM can be seen in real time.
 
 # How to use this example.
 
@@ -120,7 +120,7 @@ The example uses `nvs` to safe current state in nvs soa s after restart it to be
 
 Operative mode is one of these defined in `device_modes_t` in `commondefs.h`. `OP_MODE_STANDBY` is chosen initially. Then operative modes are changed in round ring by pressing the button. The new state is immediately stored in nvs.
 
-The example uses one LED which blinks with different period in the different states. This is enough to see that pressing a button leads to change in the application and this change is executed by the FSM.
+The example uses one LED which blinks with different period in the different states. This is enough to see that pressing a button leads to a change in the application and this change is controlled exclusively by the FSM.
 
 So we have:
 
@@ -128,6 +128,6 @@ So we have:
 * **FSM**. The FSM driver is implemented in the component `state_machine`. The FSM data is in `process.h` and `process.c`. The graphical diagram of the FSM is in `diagrams.drawio`. It is interesting to see how FSM handles the initial initialization in `P0a0` and how determines which state to go to. Then the loop between the states is executed by pressing the button and generating `evButtonSingleClick`
 * **Output device**: a LED, which blinks. The blink function is implemented using `esp_timer`. The action `P1a6`, `P1a7`, `P1a8`, `P1a9`, `P1a10` are transition actions. They are used to change blinking period.
 
-There is no even single `if` operator in `process.c`. All the logic is the FSM data tables. Actions are just actions and nothing else. They work assuming that are called in the right moment and context. The input device does need to know that a LED is driven after button events. It just informs the system (the FSM) that a button event has happened. The FSM decides what will happen next. And the actions (doers) do it.
+There is no even single `if` operator in `process.c`. All the logic is in the FSM data tables. Actions are just actions and nothing else. They work assuming that are called in the right moment and context. The input device does need to know that a LED is driven after button events. It just informs the system (the FSM) that a button event has happened. The FSM decides what will happen next. And the actions (doers) do it.
 
 Please see the graphic diagram to take shape of the logic.

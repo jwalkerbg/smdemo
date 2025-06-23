@@ -5,4 +5,32 @@ menu "Smart Air Application configuration"
         help
         This option enables the SMDEMO Application.
 
+    config BUTTON_GPIO
+        int "GPIO number for button"
+        default 12
+        range 0 46
+        help
+            This option defines the GPIO number used for the button in the application.
+
+    config BUTTON_ACTIVE_LEVEL
+        int "Button active level"
+        default 0
+        range 0 1
+        help
+            This option defines the active level of the button. Set to 0 for low active and 1 for high active.
+
+    config LED_GPIO
+        int "GPIO number for LED"
+        default 13
+        range 0 46
+        help
+            This option defines the GPIO number used for the LED in the application.
+
+    config LED_ACTIVE_LEVEL
+        int "LED active level"
+        default 1
+        range 0 1
+        help
+            This option defines the active level of the LED. Set to 0 for low active and 1 for high active.
+
 endmenu

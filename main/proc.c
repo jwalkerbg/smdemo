@@ -58,10 +58,6 @@ esp_err_t read_opmode(void)
 
 // button handling
 
-#define BUTTON_GPIO 12
-#define BUTTON_ACTIVE_LEVEL 0
-
-#define LED_GPIO 13
 
 button_handle_t btn;
 
@@ -77,8 +73,8 @@ void init_button(void)
     button_config_t btn_cfg = {0};
 
     button_gpio_config_t gpio_cfg = {
-        .gpio_num = BUTTON_GPIO,
-        .active_level = BUTTON_ACTIVE_LEVEL,
+        .gpio_num = CONFIG_BUTTON_GPIO,
+        .active_level = CONFIG_BUTTON_ACTIVE_LEVEL,
         .enable_power_save = false,
     };
 
@@ -96,14 +92,13 @@ static const int blink_intervals[] = {100, 500, 1000, 2000, 2500};  // 10Hz to 0
 
 static volatile int current_blink_index = 0;
 static esp_timer_handle_t led_timer = NULL;
-static bool led_state = false;
-
+static bool led_state = !CONFIG_LED_ACTIVE_LEVEL;
 
 // LED toggle callback (called from esp_timer)
 static void led_timer_callback(void* arg)
 {
     led_state = !led_state;
-    gpio_set_level(LED_GPIO, led_state);
+    gpio_set_level(CONFIG_LED_GPIO, led_state);
 }
 
 void set_blink_period(int index)
@@ -123,9 +118,9 @@ void set_blink_period(int index)
 
 void init_led_blinking(void)
 {
-    gpio_reset_pin(LED_GPIO);
-    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
-    gpio_set_level(LED_GPIO, 0);  // Start with LED off
+    gpio_reset_pin(CONFIG_LED_GPIO);
+    gpio_set_direction(CONFIG_LED_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(CONFIG_LED_GPIO, !CONFIG_LED_ACTIVE_LEVEL);  // Start with LED off
 
     esp_timer_create_args_t timer_args = {
         .callback = &led_timer_callback,

@@ -947,7 +947,7 @@ You now have a modular, extensible, object-oriented FSM framework in C with:
 
 ## Trace-Friendly FSM Update
 
-Let add some trace ability in fsm_handle_event. The FSM must be able to say what transitions it executes in formal way.
+Let add some trace ability in `fsm_handle_event`. The FSM must be able to say what transitions it executes in formal way.
 
 Adding traceability is a best practice for FSMs in real-time and embedded systems. This lets the FSM "say what it does" formally, enabling:
 

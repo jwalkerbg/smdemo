@@ -116,7 +116,7 @@ I (1739178) PROCESS: Trace context 1
 
 ## Notes
 
-The example uses `nvs` to safe current state in nvs soa s after restart it to be restored. This happens by storing the value of operative mode variable. See `anvs.h` and `anvs.c`. This module uses a thread executed by CPU1 for storing data in nvs. This way the  main program is run without interruption on CPU0.
+The example uses `nvs` to safe current state in nvs so as after restart it to be restored. This happens by storing the value of operative mode variable. See `anvs.h` and `anvs.c`. This module uses a thread executed by CPU1 for storing data in nvs. This way the  main program is run without interruption on CPU0.
 
 Operative mode is one of these defined in `device_modes_t` in `commondefs.h`. `OP_MODE_STANDBY` is chosen initially. Then operative modes are changed in round ring by pressing the button. The new state is immediately stored in nvs.
 
@@ -124,10 +124,14 @@ The example uses one LED which blinks with different period in the different sta
 
 So we have:
 
-* **Input device**: a button, that delivers user interaction. The input event is `evButtonSingleClick`. It is generated in the registered callback function `button_event_cb` in `proc.c`. It is called by the component `iot_button`. See the code in `proc.c` about how to created button object and how to register a callback function for given button event.
+* **Input device**: a button, that delivers user interaction. The input event is `evButtonSingleClick`. It is generated in the registered callback function `button_event_cb` in `proc.c`. It is called by the component `iot_button`. See the code in `proc.c` about how to create a button object and how to register a callback function for given button event.
 * **FSM**. The FSM driver is implemented in the component `state_machine`. The FSM data is in `process.h` and `process.c`. The graphical diagram of the FSM is in `diagrams.drawio`. It is interesting to see how FSM handles the initial initialization in `P0a0` and how determines which state to go to. Then the loop between the states is executed by pressing the button and generating `evButtonSingleClick`
 * **Output device**: a LED, which blinks. The blink function is implemented using `esp_timer`. The action `P1a6`, `P1a7`, `P1a8`, `P1a9`, `P1a10` are transition actions. They are used to change blinking period.
 
 There is no even single `if` operator in `process.c`. All the logic is in the FSM data tables. Actions are just actions and nothing else. They work assuming that are called in the right moment and context. The input device does need to know that a LED is driven after button events. It just informs the system (the FSM) that a button event has happened. The FSM decides what will happen next. And the actions (doers) do it.
 
 Please see the graphic diagram to take shape of the logic.
+
+## Future exercises
+
+Add second button, par example on GPIO14. Add a callback function that reacts to its Single clock event. Add new FSM event to the `EVENT_LIST` for that button event. Then add transitions in the FSM data to rotate the operative states in opposite direction.

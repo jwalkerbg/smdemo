@@ -190,7 +190,7 @@ void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event_data)
                     if ((transition->guard == NULL) || ((transition->guard(machine) ^ transition->gpol) == true)) {
                         machine->flags |= SM_TREN;
 #if defined(CONFIG_SM_TRACER)
-                        if (sm_is_trace_enabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine)) {
                             if (machine->trc != NULL) {
                                 machine->trc(machine,false);
                             }
@@ -212,7 +212,7 @@ void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event_data)
                             transition->action(machine);
                         }
 #if defined(CONFIG_SM_TRACER)
-                        if (sm_is_trace_enabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine)) {
                             if (machine->trm != NULL) {
                                 machine->trm(machine,transition);
                             }
@@ -228,7 +228,7 @@ void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event_data)
                             }
                         }
 #if defined(CONFIG_SM_TRACER)
-                        if (sm_is_trace_enabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine)) {
                             if (machine->trc != NULL) {
                                 machine->trc(machine,true);
                             }
@@ -241,7 +241,7 @@ void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event_data)
 // forbidden transition
                         machine->flags &= ~SM_TREN;
 #if defined(CONFIG_SM_TRACER)
-                        if (sm_is_trace_enabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine)) {
                             if (machine->trc != NULL) {
                                 machine->trc(machine,true);
                             }
@@ -257,7 +257,7 @@ void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event_data)
 #if defined(CONFIG_SM_TRACER)
 #if defined(CONFIG_SM_TRACER_LOSTEVENT)
         if ((found == false) && (machine->flags & SM_TRACE_LE)) {
-            if (sm_is_trace_enabled(machine) == true) {
+            if (sm_is_trace_enabled(machine)) {
                 if (machine->trle != NULL) {
                     machine->trle(machine);
                 }
@@ -548,13 +548,13 @@ void sm_set_tracers(sm_machine_t* machine, sm_transition_tracer_t trm, sm_contex
     }
 }
 
-// uint8_t sm_is_trace_enabled(sm_machine_t* machine)
+// bool sm_is_trace_enabled(sm_machine_t* machine)
 // Parameters:
 //   sm_machine_t* machine - pointer to state machine
 // Return: true: trace is enabled; false: trace is disabled
 // Description: Determine if tracing of *machine is enabled.
 
-uint8_t sm_is_trace_enabled(sm_machine_t* machine)
+bool sm_is_trace_enabled(sm_machine_t* machine)
 {
     if (machine != NULL) {
         return ((machine->flags & SM_TRACE) != 0) ? true : false;

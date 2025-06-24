@@ -141,7 +141,7 @@ void sm_trace_off(sm_machine_t* machine);
 void sm_trace_lost_event_on(sm_machine_t* machine);
 void sm_trace_lost_event_off(sm_machine_t* machine);
 void sm_set_tracers(sm_machine_t* machine, sm_transition_tracer_t trm, sm_context_tracer_t trc, sm_lostevent_tracer_t trle);
-uint8_t sm_is_trace_enabled(sm_machine_t* machine);
+bool sm_is_trace_enabled(sm_machine_t* machine);
 
 #endif  // defined(CONFIG_SM_TRACER)
 

@@ -10,7 +10,7 @@ menu "State machine"
 
         config SM_VERSION
             string "State Machine Version"
-            default "2.0.0"
+            default "2.1.0"
             help
                 Define the version of the State Machine component.
 

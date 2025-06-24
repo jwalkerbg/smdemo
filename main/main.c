@@ -11,7 +11,7 @@
 #include "esp_log.h"
 
 #include "commondefs.h"
-#include "sm.h"
+#include "state_machine.h"
 #include "process.h"
 #include "anvs.h"
 #include "proc.h"

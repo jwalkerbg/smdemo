@@ -12,7 +12,7 @@
 #include "process.h"
 #include "anvs.h"
 
-static const char TAG[] = "PROCESS";
+static const char TAG[] = "PS";
 
 #if defined(CONFIG_SM_TRACER)
 void sm_trace_context(sm_machine_t* machine, bool when);

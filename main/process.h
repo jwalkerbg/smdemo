@@ -11,7 +11,7 @@ extern "C" {    // allow use with C++ compilers
 #include <stdbool.h>
 #include <string.h>
 
-#include "sm.h"
+#include "state_machine.h"
 
 // sm_P1 Main process ================================================
 

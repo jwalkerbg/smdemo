@@ -7,7 +7,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 
-#include "sm.h"
+#include "state_machine.h"
 
 static const char SM_TAG[] = "SM";
 

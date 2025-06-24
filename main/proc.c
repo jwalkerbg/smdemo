@@ -15,7 +15,7 @@
 
 #include "commondefs.h"
 #include "anvs.h"
-#include "sm.h"
+#include "state_machine.h"
 
 static const char TAG[] = "proc";
 

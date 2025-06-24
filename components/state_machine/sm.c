@@ -294,7 +294,7 @@ void SM_ClearFlags(sm_machine_t* machine)
 // Return: no
 // Description: SM_Initialize initializes *machine fields with parameters.
 
-void sm_Initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx)
+void sm_initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx)
 {
     if (machine != NULL) {
         machine->s1 = s1;
@@ -451,26 +451,26 @@ void sm_activate(sm_machine_t* machine)
     }
 }
 
-// void SM_Deactivate(sm_machine_t* machine)
+// void sm_deactivate(sm_machine_t* machine)
 // Parameters:
 //   sm_machine_t* machine - pointer to state machine
 // Return: no
-// Description: SM_Deactivate deactivates *machine. *machine will not act on any events.
+// Description: sm_deactivate deactivates *machine. *machine will not act on any events.
 
-void SM_Deactivate(sm_machine_t* machine)
+void sm_deactivate(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags &= ~SM_ACTIVE;
     }
 }
 
-// uint8_t sm_is_activated(sm_machine_t* machine)
+// bool sm_is_activated(sm_machine_t* machine)
 // Parameters:
 //   sm_machine_t* machine - pointer to state machine
 // Return: true: *machine is active; false: *machine is not active
 // Description: Determine if *machine is active.
 
-uint8_t sm_is_activated(sm_machine_t* machine)
+bool sm_is_activated(sm_machine_t* machine)
 {
     if (machine != NULL) {
         return ((machine->flags & SM_ACTIVE) != 0u) ? true : false;

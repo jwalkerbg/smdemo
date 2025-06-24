@@ -15,7 +15,7 @@
 static const char TAG[] = "PROCESS";
 
 #if defined(CONFIG_SM_TRACER)
-void SM_TraceContext(sm_machine_t* machine, uint8_t when);
+void sm_trace_context(sm_machine_t* machine, bool when);
 #endif  // defined(CONFIG_SM_TRACER)
 
 // sm_P1 Main process ================================================
@@ -187,8 +187,8 @@ static const sm_state_t P1_States[sP1_STATE_COUNT] = {
 sm_machine_t sm_P1 = { 0 };
 static P1_context_t P1_ctx = { 0 };
 #if defined(CONFIG_SM_TRACER)
-static void SM_TraceMachine_1 (sm_machine_t* machine, const sm_transition_t* tr);
-static void SM_LostEvent_1(sm_machine_t* machine);
+static void sm_trace_machine_1 (sm_machine_t* machine, const sm_transition_t* tr);
+static void sm_lost_event_1(sm_machine_t* machine);
 #endif  // defined(SM_TRACER)
 
 esp_err_t register_state_machines(void)
@@ -209,8 +209,8 @@ void P1_start(void)
 
     ESP_LOGI(TAG,"Starting P1");
 
-    sm_Initialize(&sm_P1, sP1_START, P1_ID, P1_States, ARRAY_SIZE(P1_States),&P1_ctx);
-    sm_set_tracers(&sm_P1,SM_TraceMachine_1, SM_TraceContext, SM_LostEvent_1);
+    sm_initialize(&sm_P1, sP1_START, P1_ID, P1_States, ARRAY_SIZE(P1_States),&P1_ctx);
+    sm_set_tracers(&sm_P1,sm_trace_machine_1, sm_trace_context, sm_lost_event_1);
     sm_trace_on(&sm_P1);
     sm_trace_lost_event_on(&sm_P1);
     sm_start_with_event(&sm_P1,sP1_START,evP1Start);
@@ -219,7 +219,7 @@ void P1_start(void)
 void P1_stop(void)
 {
     // stop any resources running related to P1
-    SM_Deactivate(&sm_P1);
+    sm_deactivate(&sm_P1);
 }
 
 // tracers
@@ -271,7 +271,7 @@ static void SM_TraceMachine_ (sm_machine_t* machine, const sm_transition_t* tr, 
         machine->id,state_names[machine->s1],state_names[tr->s2],event_names[tr->event],tr->actidx,(machine->flags & SM_TREN) == 0 ? "not " : "");
 }
 
-static void SM_TraceMachine_1 (sm_machine_t* machine, const sm_transition_t* tr)
+static void sm_trace_machine_1 (sm_machine_t* machine, const sm_transition_t* tr)
 {
     SM_TraceMachine_(machine,tr,sP1_state_names);
 }
@@ -296,12 +296,12 @@ static void SM_TraceMachine_1 (sm_machine_t* machine, const sm_transition_t* tr)
 // SM_TraceContext may distinguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
-void SM_TraceContext(sm_machine_t* machine, uint8_t when)
+void sm_trace_context(sm_machine_t* machine, bool when)
 {
     ESP_LOGI(TAG,"Trace context %d",when);
 }
 
-static void SM_LostEvent_(sm_machine_t* machine, const char* const * state_names)
+static void sm_lost_event_(sm_machine_t* machine, const char* const * state_names)
 {
     sm_event_type_t ev = machine->event;
 
@@ -313,9 +313,9 @@ static void SM_LostEvent_(sm_machine_t* machine, const char* const * state_names
     }
 }
 
-static void SM_LostEvent_1(sm_machine_t* machine)
+static void sm_lost_event_1(sm_machine_t* machine)
 {
-    SM_LostEvent_(machine,sP1_state_names);
+    sm_lost_event_(machine,sP1_state_names);
 }
 
 #endif  // defined(CONFIG_SM_TRACER)

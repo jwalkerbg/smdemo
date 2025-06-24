@@ -1,4 +1,4 @@
-idf_component_register(SRCS "sm.c" "state_machine.c"
+idf_component_register(SRCS "state_machine.c"
                     INCLUDE_DIRS "."
                     REQUIRES main driver esp_event
 )

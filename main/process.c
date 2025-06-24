@@ -15,7 +15,7 @@
 static const char TAG[] = "PROCESS";
 
 #if defined(CONFIG_SM_TRACER)
-void SM_TraceContext(SM_MACHINE* machine, uint8_t when);
+void SM_TraceContext(sm_machine_t* machine, uint8_t when);
 #endif  // defined(CONFIG_SM_TRACER)
 
 // sm_P1 Main process ================================================
@@ -24,19 +24,19 @@ enum action_ids_P1 {
     iP1a0 = 0, iP1a1, iP1a2, iP1a3, iP1a4, iP1a5, iP1a6, iP1a7, iP1a8, iP1a9, iP1a10
 };
 
-static void P1a0(SM_MACHINE* machine);
-static void P1a1(SM_MACHINE* machine);
-static void P1a2(SM_MACHINE* machine);
-static void P1a3(SM_MACHINE* machine);
-static void P1a4(SM_MACHINE* machine);
-static void P1a5(SM_MACHINE* machine);
-static void P1a6(SM_MACHINE* machine);
-static void P1a7(SM_MACHINE* machine);
-static void P1a8(SM_MACHINE* machine);
-static void P1a9(SM_MACHINE* machine);
-static void P1a10(SM_MACHINE* machine);
+static void P1a0(sm_machine_t* machine);
+static void P1a1(sm_machine_t* machine);
+static void P1a2(sm_machine_t* machine);
+static void P1a3(sm_machine_t* machine);
+static void P1a4(sm_machine_t* machine);
+static void P1a5(sm_machine_t* machine);
+static void P1a6(sm_machine_t* machine);
+static void P1a7(sm_machine_t* machine);
+static void P1a8(sm_machine_t* machine);
+static void P1a9(sm_machine_t* machine);
+static void P1a10(sm_machine_t* machine);
 
-static void P1a0(SM_MACHINE* machine)
+static void P1a0(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a0 executed");
 
@@ -65,41 +65,41 @@ static void P1a0(SM_MACHINE* machine)
 }
 
 // going to sP1_STANDBY
-static void P1a1(SM_MACHINE* machine)
+static void P1a1(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a1 executed");
     set_blink_period(0);  // Set blink period to 10Hz
 }
 
 // going to sP1_AUTO
-static void P1a2(SM_MACHINE* machine)
+static void P1a2(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a2 executed");
     set_blink_period(1);  // Set blink period to 2Hz
 }
 
 // going to sP1_AUTO_NIGHT
-static void P1a3(SM_MACHINE* machine)
+static void P1a3(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a3 executed");
     set_blink_period(2);  // Set blink period to 1Hz
 }
 
 // going to sP1_MANUAL
-static void P1a4(SM_MACHINE* machine)
+static void P1a4(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a4 executed");
     set_blink_period(3);  // Set blink period to 0.5Hz
 }
 
 // going to sP1_TEST
-static void P1a5(SM_MACHINE* machine)
+static void P1a5(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a5 executed");
     set_blink_period(4);  // Set blink period to 0.4Hz
 }
 
-static void P1a6(SM_MACHINE* machine)
+static void P1a6(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a6 executed");
     set_blink_period(0);  // Set blink period to 10Hz
@@ -107,7 +107,7 @@ static void P1a6(SM_MACHINE* machine)
     anvs_app_op_mode_set(OP_MODE_STANDBY);
 }
 
-static void P1a7(SM_MACHINE* machine)
+static void P1a7(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a7 executed");
     set_blink_period(1);  // Set blink period to 2Hz
@@ -116,7 +116,7 @@ static void P1a7(SM_MACHINE* machine)
 
 }
 
-static void P1a8(SM_MACHINE* machine)
+static void P1a8(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a8 executed");
     set_blink_period(2);  // Set blink period to 1Hz
@@ -124,7 +124,7 @@ static void P1a8(SM_MACHINE* machine)
     anvs_app_op_mode_set(OP_MODE_AUTO_NIGHT);
 }
 
-static void P1a9(SM_MACHINE* machine)
+static void P1a9(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a9 executed");
     set_blink_period(3);  // Set blink period to 0.5Hz
@@ -132,7 +132,7 @@ static void P1a9(SM_MACHINE* machine)
     anvs_app_op_mode_set(OP_MODE_MANUAL);
 }
 
-static void P1a10(SM_MACHINE* machine)
+static void P1a10(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a10 executed");
     set_blink_period(4);  // Set blink period to 0.4Hz
@@ -140,40 +140,40 @@ static void P1a10(SM_MACHINE* machine)
     anvs_app_op_mode_set(OP_MODE_TEST);
 }
 
-static const SM_TRANSITION sP1_START_transitions[] = {
-    { evP1Start, (STATE_TYPE)sP1_RESOLVE, P1a0, iP1a0, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_START_transitions[] = {
+    { evP1Start, (sm_state_idx)sP1_RESOLVE, P1a0, iP1a0, NULL, SM_GPOL_POSITIVE },
 };
 
-static const SM_TRANSITION sP1_RESOLVE_transitions[] = {
-    { evP1Trigger1, (STATE_TYPE)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger2, (STATE_TYPE)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger3, (STATE_TYPE)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger4, (STATE_TYPE)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger5, (STATE_TYPE)sP1_MANUAL, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_RESOLVE_transitions[] = {
+    { evP1Trigger1, (sm_state_idx)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger2, (sm_state_idx)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger3, (sm_state_idx)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger4, (sm_state_idx)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger5, (sm_state_idx)sP1_MANUAL, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
 };
 
-static const SM_TRANSITION sP1_STANDBY_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO, P1a7, iP1a7, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_STANDBY_transitions[] = {
+    { evButtonSingleClick, (sm_state_idx)sP1_AUTO, P1a7, iP1a7, NULL, SM_GPOL_POSITIVE },
 };
 
-static const SM_TRANSITION sP1_AUTO_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_AUTO_NIGHT, P1a8, iP1a8, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_AUTO_transitions[] = {
+    { evButtonSingleClick, (sm_state_idx)sP1_AUTO_NIGHT, P1a8, iP1a8, NULL, SM_GPOL_POSITIVE },
 };
 
-static const SM_TRANSITION sP1_AUTO_NIGHT_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_MANUAL, P1a9, iP1a9, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_AUTO_NIGHT_transitions[] = {
+    { evButtonSingleClick, (sm_state_idx)sP1_MANUAL, P1a9, iP1a9, NULL, SM_GPOL_POSITIVE },
 };
 
-static const SM_TRANSITION sP1_MANUAL_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_TEST, P1a10, iP1a10, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_MANUAL_transitions[] = {
+    { evButtonSingleClick, (sm_state_idx)sP1_TEST, P1a10, iP1a10, NULL, SM_GPOL_POSITIVE },
 };
 
-static const SM_TRANSITION sP1_TEST_transitions[] = {
-    { evButtonSingleClick, (STATE_TYPE)sP1_STANDBY, P1a6, iP1a6, NULL, SM_GPOL_POSITIVE },
+static const sm_transition_t sP1_TEST_transitions[] = {
+    { evButtonSingleClick, (sm_state_idx)sP1_STANDBY, P1a6, iP1a6, NULL, SM_GPOL_POSITIVE },
 };
 
 // sm_P1 state machine definition
-static const SM_STATE P1_States[sP1_STATE_COUNT] = {
+static const sm_state_t P1_States[sP1_STATE_COUNT] = {
     { sP1_START_transitions, ARRAY_SIZE(sP1_START_transitions), NULL, NULL },
     { sP1_RESOLVE_transitions, ARRAY_SIZE(sP1_RESOLVE_transitions), NULL, NULL},
     { sP1_STANDBY_transitions, ARRAY_SIZE(sP1_STANDBY_transitions), NULL, NULL},
@@ -184,18 +184,18 @@ static const SM_STATE P1_States[sP1_STATE_COUNT] = {
 };
 
 
-SM_MACHINE sm_P1 = { 0 };
+sm_machine_t sm_P1 = { 0 };
 static P1_context_t P1_ctx = { 0 };
 #if defined(CONFIG_SM_TRACER)
-static void SM_TraceMachine_1 (SM_MACHINE* machine, const SM_TRANSITION* tr);
-static void SM_LostEvent_1(SM_MACHINE* machine);
+static void SM_TraceMachine_1 (sm_machine_t* machine, const sm_transition_t* tr);
+static void SM_LostEvent_1(sm_machine_t* machine);
 #endif  // defined(SM_TRACER)
 
 esp_err_t register_state_machines(void)
 {
     esp_err_t ret = ESP_OK;
 
-    ret = SM_register_state_machine(&sm_P1);
+    ret = sm_register_state_machine(&sm_P1);
 
 
     return ret == ESP_OK ? ESP_OK : ESP_FAIL;
@@ -203,17 +203,17 @@ esp_err_t register_state_machines(void)
 
 void P1_start(void)
 {
-    if (SM_IsActivated(&sm_P1) != 0) {
+    if (sm_is_activated(&sm_P1) != 0) {
         return;
     }
 
     ESP_LOGI(TAG,"Starting P1");
 
-    SM_Initialize(&sm_P1, sP1_START, P1_ID, P1_States, ARRAY_SIZE(P1_States),&P1_ctx);
-    SM_SetTracers(&sm_P1,SM_TraceMachine_1, SM_TraceContext, SM_LostEvent_1);
-    SM_TraceOn(&sm_P1);
-    SM_TraceLostEventOn(&sm_P1);
-    SM_StartWithEvent(&sm_P1,sP1_START,evP1Start);
+    sm_Initialize(&sm_P1, sP1_START, P1_ID, P1_States, ARRAY_SIZE(P1_States),&P1_ctx);
+    sm_set_tracers(&sm_P1,SM_TraceMachine_1, SM_TraceContext, SM_LostEvent_1);
+    sm_trace_on(&sm_P1);
+    sm_trace_lost_event_on(&sm_P1);
+    sm_start_with_event(&sm_P1,sP1_START,evP1Start);
 }
 
 void P1_stop(void)
@@ -250,10 +250,10 @@ const char* const sP1_state_names[] = {
 // 5. s2.entry_action           -- enter s2
 // 6. SM_TraceContext(sm,true)  -- information after entering s2
 
-// void SM_TraceMachine (SM_MACHINE* machine, const SM_TRANSITION* tr)
+// void SM_TraceMachine (sm_machine_t* machine, const sm_transition_t* tr)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
-//   const SM_TRANSITION* tr - pointer to the transition being executed
+//   sm_machine_t* machine - pointer to state machine
+//   const sm_transition_t* tr - pointer to the transition being executed
 //   const char** state_names - array of state names
 // Return: no
 // Description: SM_TraceMachine traces transitions of state machines. It accepts via arguments
@@ -265,20 +265,20 @@ const char* const sP1_state_names[] = {
 // SM_TraceMachine may distiguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
-static void SM_TraceMachine_ (SM_MACHINE* machine, const SM_TRANSITION* tr, const char* const * state_names)
+static void SM_TraceMachine_ (sm_machine_t* machine, const sm_transition_t* tr, const char* const * state_names)
 {
     ESP_LOGI(TAG,"ID=%04d, S1=%s, S2=%s, Event=%s, Action=%d %spermitted",
         machine->id,state_names[machine->s1],state_names[tr->s2],event_names[tr->event],tr->actidx,(machine->flags & SM_TREN) == 0 ? "not " : "");
 }
 
-static void SM_TraceMachine_1 (SM_MACHINE* machine, const SM_TRANSITION* tr)
+static void SM_TraceMachine_1 (sm_machine_t* machine, const sm_transition_t* tr)
 {
     SM_TraceMachine_(machine,tr,sP1_state_names);
 }
 
-// void SM_TraceContext(SM_MACHINE* machine, U8 when)
+// void SM_TraceContext(sm_machine_t* machine, U8 when)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 //   U8 when - true: before leaving s1, false: after entering s2
 // Return: no
 // Description: SM_TraceContext traces the context information associated to *machine.
@@ -296,16 +296,16 @@ static void SM_TraceMachine_1 (SM_MACHINE* machine, const SM_TRANSITION* tr)
 // SM_TraceContext may distinguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
-void SM_TraceContext(SM_MACHINE* machine, uint8_t when)
+void SM_TraceContext(sm_machine_t* machine, uint8_t when)
 {
     ESP_LOGI(TAG,"Trace context %d",when);
 }
 
-static void SM_LostEvent_(SM_MACHINE* machine, const char* const * state_names)
+static void SM_LostEvent_(sm_machine_t* machine, const char* const * state_names)
 {
-    EVENT_TYPE ev = machine->event;
+    sm_event_type_t ev = machine->event;
 
-    if (ev < evEVENTSNUMBER) {
+    if (ev < sm_EVENTS_NUMBER) {
         ESP_LOGI(TAG,"ID=%04d: Lost ev: %s, state: %s",machine->id,event_names[ev],state_names[machine->s1]);
     }
     else {
@@ -313,7 +313,7 @@ static void SM_LostEvent_(SM_MACHINE* machine, const char* const * state_names)
     }
 }
 
-static void SM_LostEvent_1(SM_MACHINE* machine)
+static void SM_LostEvent_1(sm_machine_t* machine)
 {
     SM_LostEvent_(machine,sP1_state_names);
 }

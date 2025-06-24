@@ -11,8 +11,6 @@ extern "C" {
 
 // event loop definitions and declarations
 
-
-
 #define SM_MAX_STATE_MACHINES   (CONFIG_SM_MAX_STATE_MACHINES)
 
 #define SM_EVENT_LOOP_QUEUE_SIZE    (CONFIG_SM_EVENT_LOOP_QUEUE_SIZE)
@@ -24,35 +22,35 @@ extern "C" {
 #include "events.h"
 #else
 
-// TODO: Add real events here. Do not remove evNullEvent and evEVENTSNUMBER
+// TODO: Add real events here. Do not remove evNullEvent and sm_EVENTS_NUMBER
 typedef enum {
     evNullEvent,
 
     evEVENT1,
     evEVENT2,
 
-    evEVENTSNUMBER
-} EVENT_TYPE;
+    sm_EVENTS_NUMBER
+} sm_event_type_t;
 
 #endif  // !defined(CONFIG_SM_EVENT_TYPE_DEFINED_IN_APPLICATION)
 
 esp_err_t sm_create_event_loop(void);
-esp_err_t sm_post_event(EVENT_TYPE event);
-esp_err_t sm_post_event_with_data(EVENT_TYPE event, void* event_data, size_t data_size);
+esp_err_t sm_post_event(sm_event_type_t event);
+esp_err_t sm_post_event_with_data(sm_event_type_t event, void* event_data, size_t data_size);
 
 // types
-typedef uint8_t STATE_TYPE;
-typedef struct sm_machine SM_MACHINE;
-typedef struct sm_transition SM_TRANSITION;
-typedef struct sm_state SM_STATE;
+typedef uint8_t sm_state_idx;
+typedef struct sm_machine sm_machine_t;
+typedef struct sm_transition sm_transition_t;
+typedef struct sm_state sm_state_t;
 
-typedef void (*SM_ACTION)(SM_MACHINE* machine);
-typedef uint8_t (*SM_GUARD)(SM_MACHINE* machine);
+typedef void (*sm_action_t)(sm_machine_t* machine);
+typedef uint8_t (*sm_guard_t)(sm_machine_t* machine);
 #if defined(CONFIG_SM_TRACER)
-typedef void (*SM_TRANSITION_TRACER)(SM_MACHINE* machine, const SM_TRANSITION* tr);
-typedef void (*SM_CONTEXT_TRACER)(SM_MACHINE* machine, uint8_t when);
+typedef void (*sm_transition_tracer_t)(sm_machine_t* machine, const sm_transition_t* tr);
+typedef void (*sm_context_tracer_t)(sm_machine_t* machine, uint8_t when);
 #if defined(CONFIG_SM_TRACER_LOSTEVENT)
-typedef void (*SM_LOSTEVENT_TRACER)(SM_MACHINE* machine);
+typedef void (*sm_lostevent_tracer_t)(sm_machine_t* machine);
 #endif  // defined(CONFIG_SM_TRACER_LOSTEVENT)
 #endif  // defined(CONFIG_SM_TRACER)
 
@@ -60,21 +58,21 @@ typedef void (*SM_LOSTEVENT_TRACER)(SM_MACHINE* machine);
 #define SM_GPOL_POSITIVE    (0u)
 #define SM_GPOL_NEGATIVE    (1u)
 struct sm_transition {
-    EVENT_TYPE event;       // trigger event
-    STATE_TYPE s2;          // destination state (index in an array)
-    SM_ACTION action;       // action (can be NULL: null action)
+    sm_event_type_t event;  // trigger event
+    sm_state_idx s2;        // destination state (index in an array)
+    sm_action_t action;     // action (can be NULL: null action)
     uint8_t actidx;         // action index
-    SM_GUARD guard;         // guard: true: transition is permitted, false: transition is forbidden;
+    sm_guard_t guard;       // guard: true: transition is permitted, false: transition is forbidden;
                             // (can be NULL, then transition is permitted
     uint8_t gpol;           // guard polarity: SM_GPOL_POSITIVE or SM_GPOL_NEGATIVE
 };
 
 // state
 struct sm_state {
-    const SM_TRANSITION* transitions;   // array of exit transitions (can be NULL: no exit transition from the state)
-    uint32_t size;              // number of transitions in tr[]
-    SM_ACTION entry_action;     // action on entering state, may be NULL
-    SM_ACTION exit_action;      // action on exiting state, may be NULL
+    const sm_transition_t* transitions; // array of exit transitions (can be NULL: no exit transition from the state)
+    uint32_t size;                // number of transitions in tr[]
+    sm_action_t entry_action;     // action on entering state, may be NULL
+    sm_action_t exit_action;      // action on exiting state, may be NULL
 };
 
 // state machine
@@ -88,43 +86,43 @@ struct sm_state {
 #define SM_INVALID (255u)       // no valid responce is posibble
 
 struct sm_machine {
-    STATE_TYPE s1;              // current state fo state machine (index)
+    sm_state_idx s1;            // current state fo state machine (index)
     uint8_t id;                 // state machine identifier (must be unique in the system)
     uint8_t flags;              // internal flags see masks for .flags above
-    EVENT_TYPE event;           // active event been handled
+    sm_event_type_t event;      // active event been handled
     void* event_data;           // pointer to event data (can be NULL)
-    const SM_STATE* states;     // array of states, s1 is index for it
+    const sm_state_t* states;   // array of states, s1 is index for it
     uint32_t sizes;             // number of states in states[]
     void* ctx;                  // pointer to struct containing context information for SM
                                 // can be NULL
 #if defined(CONFIG_SM_TRACER)
-    SM_TRANSITION_TRACER trm;   // pointer to tracer of the state machine
-    SM_CONTEXT_TRACER trc;      // pointer to context tracer
+    sm_transition_tracer_t trm;   // pointer to tracer of the state machine
+    sm_context_tracer_t trc;      // pointer to context tracer
 #if defined(CONFIG_SM_TRACER_LOSTEVENT)
-    SM_LOSTEVENT_TRACER trle;   // tracer of of lost events
+    sm_lostevent_tracer_t trle;   // tracer of of lost events
 #endif  // defined(CONFIG_SM_TRACER_LOSTEVENT)
 #endif  // defined(CONFIG_SM_TRACER)
 };
 
-esp_err_t SM_register_state_machine(SM_MACHINE* machine);
+esp_err_t sm_register_state_machine(sm_machine_t* machine);
 
-void SM_Machine(SM_MACHINE* machine, EVENT_TYPE ev, void* event_data);
+void sm_machine(sm_machine_t* machine, sm_event_type_t ev, void* event_data);
 
-void SM_Initialize(SM_MACHINE* machine, STATE_TYPE s1, uint8_t id, const SM_STATE* states, uint32_t sizes, void* ctx);
+void sm_Initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx);
 
-uint8_t SM_GetID(SM_MACHINE* machine);
-uint8_t SM_GetCurrentState(SM_MACHINE* machine);
-uint8_t SM_SetCurrentState(SM_MACHINE* machine, STATE_TYPE s1);
-uint8_t SM_GetStateCount(SM_MACHINE* machine);
+uint8_t sm_get_id(sm_machine_t* machine);
+uint8_t sm_get_current_state(sm_machine_t* machine);
+uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx s1);
+uint8_t sm_get_state_count(sm_machine_t* machine);
 
-void SM_SetContext(SM_MACHINE* machine, void* ctx);
-void* SM_GetContext(SM_MACHINE* machine);
+void sm_set_context(sm_machine_t* machine, void* ctx);
+void* sm_get_context(sm_machine_t* machine);
 
-void SM_Start(SM_MACHINE* machine, STATE_TYPE s1);
-void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE ev);
-void SM_Activate(SM_MACHINE* machine);
-void SM_Deactivate(SM_MACHINE* machine);
-uint8_t SM_IsActivated(SM_MACHINE* machine);
+void sm_start(sm_machine_t* machine, sm_state_idx s1);
+void sm_start_with_event(sm_machine_t* machine, sm_state_idx s1, sm_event_type_t ev);
+void sm_activate(sm_machine_t* machine);
+void SM_Deactivate(sm_machine_t* machine);
+uint8_t sm_is_activated(sm_machine_t* machine);
 
 #if defined(CONFIG_SM_TRACER)
 
@@ -132,18 +130,18 @@ uint8_t SM_IsActivated(SM_MACHINE* machine);
 struct sm_tracedata {
     uint32_t time;          // time when transition is executed
     uint8_t id;             // state machine identifier
-    STATE_TYPE s1;          // start state
-    STATE_TYPE s2;          // target state
-    EVENT_TYPE ev;          // trigger event
+    sm_state_idx s1;          // start state
+    sm_state_idx s2;          // target state
+    sm_event_type_t ev;          // trigger event
 };
 typedef struct sm_tracedata SM_TRACEDATA;
 
-void SM_TraceOn(SM_MACHINE* machine);
-void SM_TraceOff(SM_MACHINE* machine);
-void SM_TraceLostEventOn(SM_MACHINE* machine);
-void SM_TraceLostEventOff(SM_MACHINE* machine);
-void SM_SetTracers(SM_MACHINE* machine, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle);
-uint8_t SM_IsTraceEnabled(SM_MACHINE* machine);
+void sm_trace_on(sm_machine_t* machine);
+void sm_trace_off(sm_machine_t* machine);
+void sm_trace_lost_event_on(sm_machine_t* machine);
+void sm_trace_lost_event_off(sm_machine_t* machine);
+void sm_set_tracers(sm_machine_t* machine, sm_transition_tracer_t trm, sm_context_tracer_t trc, sm_lostevent_tracer_t trle);
+uint8_t sm_is_trace_enabled(sm_machine_t* machine);
 
 #endif  // defined(CONFIG_SM_TRACER)
 

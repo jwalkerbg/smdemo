@@ -52,9 +52,9 @@ esp_err_t sm_create_event_loop(void)
 }
 
 static uint32_t registered_machines = 0u;
-static SM_MACHINE* sm_list[SM_MAX_STATE_MACHINES] = { 0 };
+static sm_machine_t* sm_list[SM_MAX_STATE_MACHINES] = { 0 };
 
-// esp_err_t SM_register_state_machine(SM_MACHINE* machine)
+// esp_err_t sm_register_state_machine(sm_machine_t* machine)
 // Input:
 //  machine - a pointer to a state machine
 // Output:
@@ -63,7 +63,7 @@ static SM_MACHINE* sm_list[SM_MAX_STATE_MACHINES] = { 0 };
 //  ESP_ERR_NO_MEM - no room for more state machines to be registered
 // Desription: This function registers state machines to be run. It can register maximum SM_MAX_STATE_MACHINES.
 // If needed, SM_MAX_STATE_MACHINES can be adjusted in app configuration. There is no deregistration provided.
-esp_err_t SM_register_state_machine(SM_MACHINE* machine)
+esp_err_t sm_register_state_machine(sm_machine_t* machine)
 {
     if (machine == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -86,12 +86,12 @@ static void sm_event_handler(void* event_handler_arg, esp_event_base_t event_bas
     if (event_id != evNullEvent) {
         // Send events to state machines.
         for (uint32_t i = 0; i < registered_machines; i++) {
-            SM_Machine(sm_list[i],event_id, event_data);
+            sm_machine(sm_list[i],event_id, event_data);
         }
     }
 }
 
-// esp_err_t sm_post_event_with_data(EVENT_TYPE event, void* event_data, size_t data_size)
+// esp_err_t sm_post_event_with_data(sm_event_type_t event, void* event_data, size_t data_size)
 // Input: event: event to be posted to the sm event loop
 //        event_data: pointer to data to be passed to the event handler
 //        data_size: size of the data to be passed
@@ -99,7 +99,7 @@ static void sm_event_handler(void* event_handler_arg, esp_event_base_t event_bas
 // Description: This function posts an event to sm_loop_handle. This event then triggers a call to sm_event_handler()/.
 // The event handler then passes the event to all registered state machines.
 
-esp_err_t sm_post_event_with_data(EVENT_TYPE event, void* event_data, size_t data_size)
+esp_err_t sm_post_event_with_data(sm_event_type_t event, void* event_data, size_t data_size)
 {
     if (NULL != sm_loop_handle) {
         return esp_event_post_to(sm_loop_handle,SM_EVENTS,event,event_data,data_size,portMAX_DELAY);
@@ -109,19 +109,19 @@ esp_err_t sm_post_event_with_data(EVENT_TYPE event, void* event_data, size_t dat
     }
 }
 
-// void sm_post_event(EVENT_TYPE event)
+// void sm_post_event(sm_event_type_t event)
 // Input: event to be posted to the sm event loop
 // Output: error code from esp_event_post_to()
 // Description: This function posts an event to sm_loop_handle. This event then triggers a call to sm_event_handler()
 
-esp_err_t sm_post_event(EVENT_TYPE event)
+esp_err_t sm_post_event(sm_event_type_t event)
 {
     return sm_post_event_with_data(event,NULL,0u);
 }
 
-// void SM_machine(SM_MACHINE* machine)
+// void SM_machine(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
 // Description: SM_machine searches for a transition to be triggered by event event.
 // If it finds transition, it checks if it is permitted by guard (if any). If the
@@ -149,11 +149,11 @@ esp_err_t sm_post_event(EVENT_TYPE event)
 // SM_TraceContext may distinguish permitted from not permitted transition by looking
 // flag SM_TREN. If SM_TREN is 1 (true), transition is permitted.
 
-void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
+void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event_data)
 {
     uint8_t i;                  // loop variable
-    const SM_STATE* state;      // pointer to current state
-    const SM_TRANSITION* transition;    // pointer to transition array of current state
+    const sm_state_t* state;      // pointer to current state
+    const sm_transition_t* transition;    // pointer to transition array of current state
     uint8_t transnum;                   // number of transitions in transition[]
     static bool s1neqs2;        // true, if start and target states are different
     static bool found;          // found a transition, either disabled or enabled
@@ -171,7 +171,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
             transition = state->transitions;    // transition array of current state (or NULL)
             transnum = state->size;             // number of transitions in transition[]
         } else {
-            transition = NULL;                  // found a NULL pointer in SM_STATE[machine->s1]
+            transition = NULL;                  // found a NULL pointer in sm_state_t[machine->s1]
             transnum = 0u;
         }
 
@@ -190,7 +190,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
                     if ((transition->guard == NULL) || ((transition->guard(machine) ^ transition->gpol) == true)) {
                         machine->flags |= SM_TREN;
 #if defined(CONFIG_SM_TRACER)
-                        if (SM_IsTraceEnabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine) == true) {
                             if (machine->trc != NULL) {
                                 machine->trc(machine,false);
                             }
@@ -212,7 +212,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
                             transition->action(machine);
                         }
 #if defined(CONFIG_SM_TRACER)
-                        if (SM_IsTraceEnabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine) == true) {
                             if (machine->trm != NULL) {
                                 machine->trm(machine,transition);
                             }
@@ -228,7 +228,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
                             }
                         }
 #if defined(CONFIG_SM_TRACER)
-                        if (SM_IsTraceEnabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine) == true) {
                             if (machine->trc != NULL) {
                                 machine->trc(machine,true);
                             }
@@ -241,7 +241,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
 // forbidden transition
                         machine->flags &= ~SM_TREN;
 #if defined(CONFIG_SM_TRACER)
-                        if (SM_IsTraceEnabled(machine) == true) {
+                        if (sm_is_trace_enabled(machine) == true) {
                             if (machine->trc != NULL) {
                                 machine->trc(machine,true);
                             }
@@ -257,7 +257,7 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
 #if defined(CONFIG_SM_TRACER)
 #if defined(CONFIG_SM_TRACER_LOSTEVENT)
         if ((found == false) && (machine->flags & SM_TRACE_LE)) {
-            if (SM_IsTraceEnabled(machine) == true) {
+            if (sm_is_trace_enabled(machine) == true) {
                 if (machine->trle != NULL) {
                     machine->trle(machine);
                 }
@@ -268,33 +268,33 @@ void SM_Machine(SM_MACHINE* machine, EVENT_TYPE event, void* event_data)
     }
 }
 
-// static void SM_ClearFlags(SM_MACHINE* machine)
+// static void SM_ClearFlags(sm_machine_t* machine)
 // Parameters:
-//  SM_MACHINE* machine - pointer to state machine
+//  sm_machine_t* machine - pointer to state machine
 // Return: no
 // Description: Reset all flags to zero (false).
 
-void SM_ClearFlags(SM_MACHINE* machine);
+void SM_ClearFlags(sm_machine_t* machine);
 
-void SM_ClearFlags(SM_MACHINE* machine)
+void SM_ClearFlags(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags = 0u;
     }
 }
 
-// void SM_Initialize(SM_MACHINE* machine, STATE_TYPE s1, uint8_t id, const SM_STATE* states, uint32_t sizes, void* ctx)
+// void SM_Initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
-//   STATE_TYPE s1 - start (initial) state
+//   sm_machine_t* machine - pointer to state machine
+//   sm_state_idx s1 - start (initial) state
 //   uint8_t id - identifier of state machine
-//   const SM_STATE* states - pointer to states array
+//   const sm_state_t* states - pointer to states array
 //   uint32_t sizes - size of states array
 //   void* ctx - pointer to user defined context structure
 // Return: no
 // Description: SM_Initialize initializes *machine fields with parameters.
 
-void SM_Initialize(SM_MACHINE* machine, STATE_TYPE s1, uint8_t id, const SM_STATE* states, uint32_t sizes, void* ctx)
+void sm_Initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx)
 {
     if (machine != NULL) {
         machine->s1 = s1;
@@ -302,7 +302,7 @@ void SM_Initialize(SM_MACHINE* machine, STATE_TYPE s1, uint8_t id, const SM_STAT
         machine->states = states;
         machine->sizes = sizes;
 
-        SM_SetContext(machine,ctx);
+        sm_set_context(machine,ctx);
         SM_ClearFlags(machine);
 
 #if defined(CONFIG_SM_TRACER)
@@ -313,39 +313,39 @@ void SM_Initialize(SM_MACHINE* machine, STATE_TYPE s1, uint8_t id, const SM_STAT
     }
 }
 
-// uint8_t SM_GetID(SM_MACHINE* machine)
+// uint8_t SM_GetID(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return:
 //   Identifier of state machine
 // Description: SM_GetID returns the identifier of state machine *machine.
 
-uint8_t SM_GetID(SM_MACHINE* machine)
+uint8_t sm_get_id(sm_machine_t* machine)
 {
     return (machine != NULL) ? machine->id : SM_INVALID;
 }
 
-// uint8_t SM_GetCurrentState(SM_MACHINE* machine)
+// uint8_t SM_GetCurrentState(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return:
 //   current state of *machine
 // Description: SM_GetCurrentState returns current state of the machine.
 
-uint8_t SM_GetCurrentState(SM_MACHINE* machine)
+uint8_t sm_get_current_state(sm_machine_t* machine)
 {
     return (machine != NULL) ? machine->s1 : SM_INVALID;
 }
 
-// uint8_t SM_SetCurrentState(SM_MACHINE* machine, STATE_TYPE s1)
+// uint8_t SM_SetCurrentState(sm_machine_t* machine, sm_state_idx s1)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
-//   STATE_TYPE s1 - state
+//   sm_machine_t* machine - pointer to state machine
+//   sm_state_idx s1 - state
 // Return:
 //   true: State Machine is put in s1 state
 //   false: State Machine is not touched, because s1 is invalid
 
-uint8_t SM_SetCurrentState(SM_MACHINE* machine, STATE_TYPE s1)
+uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx s1)
 {
     if (machine != NULL) {
         if (s1 < machine->sizes) {
@@ -356,81 +356,81 @@ uint8_t SM_SetCurrentState(SM_MACHINE* machine, STATE_TYPE s1)
     return false;
 }
 
-// uint8_t SM_GetStateCount(SM_MACHINE* machine)
+// uint8_t sm_get_state_count(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return:
 //   number of states in *machine
-// Description: SM_GetStateCount returns the number of states of *machine.
+// Description: sm_get_state_count returns the number of states of *machine.
 
-uint8_t SM_GetStateCount(SM_MACHINE* machine)
+uint8_t sm_get_state_count(sm_machine_t* machine)
 {
     return (machine != NULL) ? machine->sizes : SM_INVALID;
 }
 
-// void SM_SetContext(SM_MACHINE* machine, void* ctx)
+// void sm_set_context(sm_machine_t* machine, void* ctx)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
 // Description: Sets context of the state machine pointed to by *machine.
 
-void SM_SetContext(SM_MACHINE* machine, void* ctx)
+void sm_set_context(sm_machine_t* machine, void* ctx)
 {
     if (machine != NULL) {
         machine->ctx = ctx;
     }
 }
 
-// void* SM_GetContext(SM_MACHINE* machine)
+// void* sm_get_context(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: pointer to context structure
 // Description: Return pointer to a structure that contains context information of *machine state machine.
 
-void* SM_GetContext(SM_MACHINE* machine)
+void* sm_get_context(sm_machine_t* machine)
 {
     return (machine != NULL) ? machine->ctx : NULL;
 }
 
-// void SM_Start(SM_MACHINE* machine, STATE_TYPE s1)
+// void sm_start(sm_machine_t* machine, sm_state_idx s1)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
-//   STATE_TYPE s1 - start state
+//   sm_machine_t* machine - pointer to state machine
+//   sm_state_idx s1 - start state
 // Return: no
-// Description: SM_Start puts the state machine pointed to by *machine in state s1 and activates it.
+// Description: sm_start puts the state machine pointed to by *machine in state s1 and activates it.
 // If s1 is not valid machine function does not have any effect. It the state machine has been already
 // activated, machine function does not do anything.
-// After call of SM_StartWithEvent the caller should check if *machine is activated.
+// After call of sm_start_with_event the caller should check if *machine is activated.
 
-void SM_Start(SM_MACHINE* machine, STATE_TYPE s1)
+void sm_start(sm_machine_t* machine, sm_state_idx s1)
 {
     if (machine != NULL) {
-        if (SM_IsActivated(machine) == false) {
-            if (SM_SetCurrentState(machine,s1) == true) {
-                SM_Activate(machine);
+        if (sm_is_activated(machine) == false) {
+            if (sm_set_current_state(machine,s1) == true) {
+                sm_activate(machine);
             }
         }
     }
 }
 
-// void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE event)
+// void sm_start_with_event(sm_machine_t* machine, sm_state_idx s1, sm_event_type_t event)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
-//   STATE_TYPE s1 - start state
-//   EVENT_TYPE event - event that triggers *machine in s1
+//   sm_machine_t* machine - pointer to state machine
+//   sm_state_idx s1 - start state
+//   sm_event_type_t event - event that triggers *machine in s1
 // Return: no
-// Description: SM_StartWithEvent puts the state machine pointed to by *machine in state s1, activates it
+// Description: sm_start_with_event puts the state machine pointed to by *machine in state s1, activates it
 // and then injects event event. If s1 is not valid machine function does not have any effect. It the state machine
 // has been already activated, machine function does not do anything.
-// After call of SM_StartWithEvent the caller should check if *machine is activated.
+// After call of sm_start_with_event the caller should check if *machine is activated.
 
-void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE event)
+void sm_start_with_event(sm_machine_t* machine, sm_state_idx s1, sm_event_type_t event)
 {
     if (machine != NULL) {
-        if (SM_IsActivated(machine) == false) {
-            if (event < evEVENTSNUMBER) {
-                if (SM_SetCurrentState(machine,s1) == true) {
-                    SM_Activate(machine);
+        if (sm_is_activated(machine) == false) {
+            if (event < sm_EVENTS_NUMBER) {
+                if (sm_set_current_state(machine,s1) == true) {
+                    sm_activate(machine);
                     sm_post_event(event);
                 }
             }
@@ -438,39 +438,39 @@ void SM_StartWithEvent(SM_MACHINE* machine, STATE_TYPE s1, EVENT_TYPE event)
     }
 }
 
-// void SM_Activate(SM_MACHINE* machine)
+// void sm_activate(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
-// Description: SM_Activate activates *machine.
+// Description: sm_activate activates *machine.
 
-void SM_Activate(SM_MACHINE* machine)
+void sm_activate(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags |= SM_ACTIVE;
     }
 }
 
-// void SM_Deactivate(SM_MACHINE* machine)
+// void SM_Deactivate(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
 // Description: SM_Deactivate deactivates *machine. *machine will not act on any events.
 
-void SM_Deactivate(SM_MACHINE* machine)
+void SM_Deactivate(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags &= ~SM_ACTIVE;
     }
 }
 
-// uint8_t SM_IsActivated(SM_MACHINE* machine)
+// uint8_t sm_is_activated(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: true: *machine is active; false: *machine is not active
 // Description: Determine if *machine is active.
 
-uint8_t SM_IsActivated(SM_MACHINE* machine)
+uint8_t sm_is_activated(sm_machine_t* machine)
 {
     if (machine != NULL) {
         return ((machine->flags & SM_ACTIVE) != 0u) ? true : false;
@@ -480,66 +480,66 @@ uint8_t SM_IsActivated(SM_MACHINE* machine)
 
 #if defined(CONFIG_SM_TRACER)
 
-// void SM_TraceOn(SM_MACHINE* machine)
+// void sm_trace_on(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
-// Description: SM_TraceOn enables tracing of *machine state machine
+// Description: sm_trace_on enables tracing of *machine state machine
 
-void SM_TraceOn(SM_MACHINE* machine)
+void sm_trace_on(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags |= SM_TRACE;
     }
 }
 
-// void SM_TraceOff(SM_MACHINE* machine)
+// void sm_trace_off(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
-// Description: SM_TraceOff disables tracing of *machine state machine
+// Description: sm_trace_off disables tracing of *machine state machine
 
-void SM_TraceOff(SM_MACHINE* machine)
+void sm_trace_off(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags &= ~SM_TRACE;
     }
 }
 
-// void SM_TraceLostEventOn(SM_MACHINE* machine)
+// void sm_trace_lost_event_on(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
-// Description: SM_TraceLostEventOn enables tracing of lost events of *machine state machine
+// Description: sm_trace_lost_event_on enables tracing of lost events of *machine state machine
 
-void SM_TraceLostEventOn(SM_MACHINE* machine)
+void sm_trace_lost_event_on(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags |= SM_TRACE_LE;
     }
 }
 
-// void SM_TraceLostEventOff(SM_MACHINE* machine)
+// void sm_trace_lost_event_off(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: no
-// Description: SM_TraceLostEventOff disables tracing of lost events of *machine state machine
+// Description: sm_trace_lost_event_off disables tracing of lost events of *machine state machine
 // Note: This function does not disable tracing of *machine state machine.
 
-void SM_TraceLostEventOff(SM_MACHINE* machine)
+void sm_trace_lost_event_off(sm_machine_t* machine)
 {
     if (machine != NULL) {
         machine->flags &= ~SM_TRACE_LE;
     }
 }
 
-// void SM_SetTracers(SM_MACHINE* machine, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle)
+// void sm_set_tracers(sm_machine_t* machine, sm_transition_tracer_t trm, sm_context_tracer_t trc, sm_lostevent_tracer_t trle)
 // Parameters:
-//  SM_MACHINE* machine - pointer to state machine
-//  SM_TRANSITION_TRACER trm - pointer to a transition tracer
-//  SM_CONTEXT_TRACER trc - pointer to a context tracer
-//  SM_LOSTEVENT_TRACER trle - pointer to a lost events tracer
-void SM_SetTracers(SM_MACHINE* machine, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRACER trc, SM_LOSTEVENT_TRACER trle)
+//  sm_machine_t* machine - pointer to state machine
+//  sm_transition_tracer_t trm - pointer to a transition tracer
+//  sm_context_tracer_t trc - pointer to a context tracer
+//  sm_lostevent_tracer_t trle - pointer to a lost events tracer
+void sm_set_tracers(sm_machine_t* machine, sm_transition_tracer_t trm, sm_context_tracer_t trc, sm_lostevent_tracer_t trle)
 {
     if (machine != NULL) {
         machine->trm = trm;
@@ -548,13 +548,13 @@ void SM_SetTracers(SM_MACHINE* machine, SM_TRANSITION_TRACER trm, SM_CONTEXT_TRA
     }
 }
 
-// uint8_t SM_IsTraceEnabled(SM_MACHINE* machine)
+// uint8_t sm_is_trace_enabled(sm_machine_t* machine)
 // Parameters:
-//   SM_MACHINE* machine - pointer to state machine
+//   sm_machine_t* machine - pointer to state machine
 // Return: true: trace is enabled; false: trace is disabled
 // Description: Determine if tracing of *machine is enabled.
 
-uint8_t SM_IsTraceEnabled(SM_MACHINE* machine)
+uint8_t sm_is_trace_enabled(sm_machine_t* machine)
 {
     if (machine != NULL) {
         return ((machine->flags & SM_TRACE) != 0) ? true : false;

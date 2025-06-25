@@ -312,7 +312,7 @@ uint8_t sm_get_current_state(sm_machine_t* machine)
 //   true: State Machine is put in s1 state
 //   false: State Machine is not touched, because s1 is invalid
 
-uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1)
+bool sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1)
 {
     if (machine != NULL) {
         if (s1 < machine->sizes) {
@@ -323,7 +323,7 @@ uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1)
     return false;
 }
 
-uint8_t sm_get_state_count(sm_machine_t* machine)
+sm_state_idx_t sm_get_state_count(sm_machine_t* machine)
 {
     return (machine != NULL) ? machine->sizes : SM_INVALID;
 }
@@ -344,7 +344,7 @@ void sm_start(sm_machine_t* machine, sm_state_idx_t s1)
 {
     if (machine != NULL) {
         if (sm_is_activated(machine) == false) {
-            if (sm_set_current_state(machine,s1) == true) {
+            if (sm_set_current_state(machine,s1)) {
                 sm_activate(machine);
             }
         }
@@ -356,7 +356,7 @@ void sm_start_with_event(sm_machine_t* machine, sm_state_idx_t s1, sm_event_type
     if (machine != NULL) {
         if (sm_is_activated(machine) == false) {
             if (event < sm_EVENTS_NUMBER) {
-                if (sm_set_current_state(machine,s1) == true) {
+                if (sm_set_current_state(machine,s1)) {
                     sm_activate(machine);
                     sm_post_event(event);
                 }

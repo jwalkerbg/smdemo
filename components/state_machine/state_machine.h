@@ -247,7 +247,7 @@ uint8_t sm_get_current_state(sm_machine_t* machine);
  * @note This function does not execute any entry/exit actions or transitions;
  * it simply changes the current state index.
  */
-uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1);
+bool sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1);
 
 /**
  * @brief Returns the number of states defined in the state machine.
@@ -263,7 +263,7 @@ uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1);
  *
  * @note `SM_INVALID` should be defined to indicate an invalid or error value (e.g., `0xFF`).
  */
-uint8_t sm_get_state_count(sm_machine_t* machine);
+sm_state_idx_t sm_get_state_count(sm_machine_t* machine);
 
 /**
  * @brief Sets the user-defined context for the state machine.

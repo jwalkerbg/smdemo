@@ -275,7 +275,7 @@ static void sm_machine(sm_machine_t* machine, sm_event_type_t event, void* event
     }
 }
 
-void sm_initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx)
+void sm_initialize(sm_machine_t* machine, sm_state_idx_t s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx)
 {
     if (machine != NULL) {
         machine->s1 = s1;
@@ -304,15 +304,15 @@ uint8_t sm_get_current_state(sm_machine_t* machine)
     return (machine != NULL) ? machine->s1 : SM_INVALID;
 }
 
-// uint8_t SM_SetCurrentState(sm_machine_t* machine, sm_state_idx s1)
+// uint8_t SM_SetCurrentState(sm_machine_t* machine, sm_state_idx_t s1)
 // Parameters:
 //   sm_machine_t* machine - pointer to state machine
-//   sm_state_idx s1 - state
+//   sm_state_idx_t s1 - state
 // Return:
 //   true: State Machine is put in s1 state
 //   false: State Machine is not touched, because s1 is invalid
 
-uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx s1)
+uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1)
 {
     if (machine != NULL) {
         if (s1 < machine->sizes) {
@@ -340,7 +340,7 @@ void* sm_get_context(sm_machine_t* machine)
     return (machine != NULL) ? machine->ctx : NULL;
 }
 
-void sm_start(sm_machine_t* machine, sm_state_idx s1)
+void sm_start(sm_machine_t* machine, sm_state_idx_t s1)
 {
     if (machine != NULL) {
         if (sm_is_activated(machine) == false) {
@@ -351,7 +351,7 @@ void sm_start(sm_machine_t* machine, sm_state_idx s1)
     }
 }
 
-void sm_start_with_event(sm_machine_t* machine, sm_state_idx s1, sm_event_type_t event)
+void sm_start_with_event(sm_machine_t* machine, sm_state_idx_t s1, sm_event_type_t event)
 {
     if (machine != NULL) {
         if (sm_is_activated(machine) == false) {

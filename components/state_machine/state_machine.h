@@ -9,6 +9,8 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include "esp_err.h"
 
 /*
@@ -87,7 +89,7 @@ esp_err_t sm_post_event(sm_event_type_t event);
 esp_err_t sm_post_event_with_data(sm_event_type_t event, void* event_data, size_t data_size);
 
 /* forward definition of types */
-typedef uint8_t sm_state_idx;
+typedef uint8_t sm_state_idx_t;
 typedef struct sm_machine sm_machine_t;
 typedef struct sm_transition sm_transition_t;
 typedef struct sm_state sm_state_t;
@@ -107,7 +109,7 @@ typedef void (*sm_lostevent_tracer_t)(sm_machine_t* machine);
 #define SM_GPOL_NEGATIVE    (1u)
 struct sm_transition {
     sm_event_type_t event;  // trigger event
-    sm_state_idx s2;        // destination state (index in an array)
+    sm_state_idx_t s2;      // destination state (index in an array)
     sm_action_t action;     // action (can be NULL: null action)
     uint8_t actidx;         // action index
     sm_guard_t guard;       // guard: true: transition is permitted, false: transition is forbidden;
@@ -134,7 +136,7 @@ struct sm_state {
 #define SM_INVALID (255u)           // no valid response is possible
 
 struct sm_machine {
-    sm_state_idx s1;            // current state of state machine (index)
+    sm_state_idx_t s1;          // current state of state machine (index)
     uint8_t id;                 // state machine identifier (must be unique in the system)
     uint8_t flags;              // internal flags see masks for .flags above
     sm_event_type_t event;      // active event been handled
@@ -195,7 +197,7 @@ esp_err_t sm_register_state_machine(sm_machine_t* machine);
  *
  * @return None.
  */
-void sm_initialize(sm_machine_t* machine, sm_state_idx s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx);
+void sm_initialize(sm_machine_t* machine, sm_state_idx_t s1, uint8_t id, const sm_state_t* states, uint32_t sizes, void* ctx);
 
 /**
  * @brief Retrieves the identifier of a state machine instance.
@@ -245,7 +247,7 @@ uint8_t sm_get_current_state(sm_machine_t* machine);
  * @note This function does not execute any entry/exit actions or transitions;
  * it simply changes the current state index.
  */
-uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx s1);
+uint8_t sm_set_current_state(sm_machine_t* machine, sm_state_idx_t s1);
 
 /**
  * @brief Returns the number of states defined in the state machine.
@@ -307,7 +309,7 @@ void* sm_get_context(sm_machine_t* machine);
  * @see sm_set_current_state
  * @see sm_activate
  */
-void sm_start(sm_machine_t* machine, sm_state_idx s1);
+void sm_start(sm_machine_t* machine, sm_state_idx_t s1);
 
 /**
  * @brief Starts the state machine in a specified initial state and posts an event.
@@ -327,7 +329,7 @@ void sm_start(sm_machine_t* machine, sm_state_idx s1);
  * @see sm_activate
  * @see sm_post_event
  */
-void sm_start_with_event(sm_machine_t* machine, sm_state_idx s1, sm_event_type_t ev);
+void sm_start_with_event(sm_machine_t* machine, sm_state_idx_t s1, sm_event_type_t ev);
 
 /**
  * @brief Activates the specified state machine.
@@ -377,8 +379,8 @@ bool sm_is_activated(sm_machine_t* machine);
 struct sm_tracedata {
     uint32_t time;          // time when transition is executed
     uint8_t id;             // state machine identifier
-    sm_state_idx s1;        // start state
-    sm_state_idx s2;        // target state
+    sm_state_idx_t s1;      // start state
+    sm_state_idx_t s2;      // target state
     sm_event_type_t ev;     // trigger event
 };
 typedef struct sm_tracedata SM_TRACEDATA;

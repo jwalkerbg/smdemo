@@ -28,18 +28,18 @@ dependencies:
       type: idf
     version: 5.4.1
   state_machine:
-    component_hash: 281680cd65b34b4850497da8c5c6d9c41b9bb2ed105dfe436f6bad5f104959d3
+    component_hash: e3e516786c3fb3abaae483567ec7599e86a45be0d88536222cef5a7be1f67ee1
     dependencies:
     - name: idf
       version: '>=5.4'
     source:
-      git: https://repo.pts.rnd.bg:4444/ivan.cenov/state_machine.git
+      git: https://repo.pts.rnd.bg:4444/RnD/state_machine.git
       path: .
       type: git
-    version: cf3ba96c4d55b1ad2f202697140a5d61374b8604
+    version: 2ded52c7e249821b5384d07625e8a5a8add1b06b
 direct_dependencies:
 - espressif/button
 - state_machine
-manifest_hash: ac9afe0ae7460be4c91b4ddf461158cd0b1a9cc10f999f88b09e52596558af13
+manifest_hash: 231f725b0371bd97e8675de3463e574a42c9033b51a5fb3758108aae2361a320
 target: esp32s3
 version: 2.0.0

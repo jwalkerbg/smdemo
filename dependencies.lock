@@ -33,13 +33,13 @@ dependencies:
     - name: idf
       version: '>=5.4'
     source:
-      git: https://repo.pts.rnd.bg:4444/RnD/state_machine.git
+      git: http://gitea.imc.bg:3010/imc/state_machine.git
       path: .
       type: git
     version: 2ded52c7e249821b5384d07625e8a5a8add1b06b
 direct_dependencies:
 - espressif/button
 - state_machine
-manifest_hash: 231f725b0371bd97e8675de3463e574a42c9033b51a5fb3758108aae2361a320
+manifest_hash: 1f518033ed7bd8c2ac86d947abfc7d28c256791f8635d591adc79214c4e4f87d
 target: esp32s3
 version: 2.0.0

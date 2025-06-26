@@ -141,35 +141,35 @@ static void P1a10(sm_machine_t* machine)
 }
 
 static const sm_transition_t sP1_START_transitions[] = {
-    { evP1Start, (sm_state_idx)sP1_RESOLVE, P1a0, iP1a0, NULL, SM_GPOL_POSITIVE },
+    { evP1Start, (sm_state_idx_t)sP1_RESOLVE, P1a0, iP1a0, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_RESOLVE_transitions[] = {
-    { evP1Trigger1, (sm_state_idx)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger2, (sm_state_idx)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger3, (sm_state_idx)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger4, (sm_state_idx)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
-    { evP1Trigger5, (sm_state_idx)sP1_MANUAL, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger1, (sm_state_idx_t)sP1_STANDBY, P1a1, iP1a1, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger2, (sm_state_idx_t)sP1_AUTO, P1a2, iP1a2, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger3, (sm_state_idx_t)sP1_AUTO_NIGHT, P1a3, iP1a3, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger4, (sm_state_idx_t)sP1_MANUAL, P1a4, iP1a4, NULL, SM_GPOL_POSITIVE },
+    { evP1Trigger5, (sm_state_idx_t)sP1_MANUAL, P1a5, iP1a5, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_STANDBY_transitions[] = {
-    { evButtonSingleClick, (sm_state_idx)sP1_AUTO, P1a7, iP1a7, NULL, SM_GPOL_POSITIVE },
+    { evButtonSingleClick, (sm_state_idx_t)sP1_AUTO, P1a7, iP1a7, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_AUTO_transitions[] = {
-    { evButtonSingleClick, (sm_state_idx)sP1_AUTO_NIGHT, P1a8, iP1a8, NULL, SM_GPOL_POSITIVE },
+    { evButtonSingleClick, (sm_state_idx_t)sP1_AUTO_NIGHT, P1a8, iP1a8, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_AUTO_NIGHT_transitions[] = {
-    { evButtonSingleClick, (sm_state_idx)sP1_MANUAL, P1a9, iP1a9, NULL, SM_GPOL_POSITIVE },
+    { evButtonSingleClick, (sm_state_idx_t)sP1_MANUAL, P1a9, iP1a9, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_MANUAL_transitions[] = {
-    { evButtonSingleClick, (sm_state_idx)sP1_TEST, P1a10, iP1a10, NULL, SM_GPOL_POSITIVE },
+    { evButtonSingleClick, (sm_state_idx_t)sP1_TEST, P1a10, iP1a10, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_TEST_transitions[] = {
-    { evButtonSingleClick, (sm_state_idx)sP1_STANDBY, P1a6, iP1a6, NULL, SM_GPOL_POSITIVE },
+    { evButtonSingleClick, (sm_state_idx_t)sP1_STANDBY, P1a6, iP1a6, NULL, SM_GPOL_POSITIVE },
 };
 
 // sm_P1 state machine definition

@@ -4,7 +4,7 @@ idf_component_register(SRCS
         "anvs.c"
         "proc.c"
         INCLUDE_DIRS "." "include"
-        REQUIRES esp_timer state_machine nvs_flash
+        REQUIRES esp_timer nvs_flash
 )
 
 # Pass the version to the build system

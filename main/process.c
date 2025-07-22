@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "esp_attr.h"
 #include <string.h>
+
+#include "esp_timer.h"
 #include <esp_log.h>
 
 #include "commondefs.h"
@@ -21,7 +23,8 @@ void sm_trace_context(sm_machine_t* machine, bool when);
 // sm_P1 Main process ================================================
 
 enum action_ids_P1 {
-    iP1a0 = 0, iP1a1, iP1a2, iP1a3, iP1a4, iP1a5, iP1a6, iP1a7, iP1a8, iP1a9, iP1a10
+    iP1a0 = 0, iP1a1, iP1a2, iP1a3, iP1a4, iP1a5, iP1a6, iP1a7, iP1a8, iP1a9, iP1a10,
+    iP1a16 = 16, iP1a17, iP1a18, iP1a19, iP1a20
 };
 
 static void P1a0(sm_machine_t* machine);
@@ -36,9 +39,17 @@ static void P1a8(sm_machine_t* machine);
 static void P1a9(sm_machine_t* machine);
 static void P1a10(sm_machine_t* machine);
 
+static void P1a16(sm_machine_t* machine);
+static void P1a17(sm_machine_t* machine);
+static void P1a18(sm_machine_t* machine);
+static void P1a19(sm_machine_t* machine);
+static void P1a20(sm_machine_t* machine);
+
 static void P1a0(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a0 executed");
+
+    P1_context_t* ctx = (P1_context_t* )(machine->ctx);
 
     read_opmode();
     device_modes_t ops = get_opmode();
@@ -62,6 +73,8 @@ static void P1a0(sm_machine_t* machine)
         default:
             break;
     }
+
+    esp_timer_start_periodic(ctx->t_blink_changer, CONFIG_LED_BLINK_PERIOD_CHANGER_INTERVAL * 1000); // Convert ms to us
 }
 
 // going to sP1_STANDBY
@@ -140,6 +153,41 @@ static void P1a10(sm_machine_t* machine)
     anvs_app_op_mode_set(OP_MODE_TEST);
 }
 
+static void P1a16(sm_machine_t* machine)
+{
+    ESP_LOGI(TAG,"P1a6 executed");
+    set_blink_period(0);  // Set blink period to 10Hz
+    set_opmode(OP_MODE_STANDBY);
+}
+
+static void P1a17(sm_machine_t* machine)
+{
+    ESP_LOGI(TAG,"P1a7 executed");
+    set_blink_period(1);  // Set blink period to 2Hz
+    set_opmode(OP_MODE_AUTO);
+}
+
+static void P1a18(sm_machine_t* machine)
+{
+    ESP_LOGI(TAG,"P1a8 executed");
+    set_blink_period(2);  // Set blink period to 1Hz
+    set_opmode(OP_MODE_AUTO_NIGHT);
+}
+
+static void P1a19(sm_machine_t* machine)
+{
+    ESP_LOGI(TAG,"P1a9 executed");
+    set_blink_period(3);  // Set blink period to 0.5Hz
+    set_opmode(OP_MODE_MANUAL);
+}
+
+static void P1a20(sm_machine_t* machine)
+{
+    ESP_LOGI(TAG,"P1a10 executed");
+    set_blink_period(4);  // Set blink period to 0.4Hz
+    set_opmode(OP_MODE_TEST);
+}
+
 static const sm_transition_t sP1_START_transitions[] = {
     { evP1Start, (sm_state_idx_t)sP1_RESOLVE, P1a0, iP1a0, NULL, SM_GPOL_POSITIVE },
 };
@@ -154,22 +202,27 @@ static const sm_transition_t sP1_RESOLVE_transitions[] = {
 
 static const sm_transition_t sP1_STANDBY_transitions[] = {
     { evButtonSingleClick, (sm_state_idx_t)sP1_AUTO, P1a7, iP1a7, NULL, SM_GPOL_POSITIVE },
+    { ev_t_blink_changer_tick, (sm_state_idx_t)sP1_TEST, P1a20, iP1a20, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_AUTO_transitions[] = {
     { evButtonSingleClick, (sm_state_idx_t)sP1_AUTO_NIGHT, P1a8, iP1a8, NULL, SM_GPOL_POSITIVE },
+    { ev_t_blink_changer_tick, (sm_state_idx_t)sP1_STANDBY, P1a16, iP1a16, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_AUTO_NIGHT_transitions[] = {
     { evButtonSingleClick, (sm_state_idx_t)sP1_MANUAL, P1a9, iP1a9, NULL, SM_GPOL_POSITIVE },
+    { ev_t_blink_changer_tick, (sm_state_idx_t)sP1_AUTO, P1a17, iP1a17, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_MANUAL_transitions[] = {
     { evButtonSingleClick, (sm_state_idx_t)sP1_TEST, P1a10, iP1a10, NULL, SM_GPOL_POSITIVE },
+    { ev_t_blink_changer_tick, (sm_state_idx_t)sP1_AUTO_NIGHT, P1a18, iP1a18, NULL, SM_GPOL_POSITIVE },
 };
 
 static const sm_transition_t sP1_TEST_transitions[] = {
     { evButtonSingleClick, (sm_state_idx_t)sP1_STANDBY, P1a6, iP1a6, NULL, SM_GPOL_POSITIVE },
+    { ev_t_blink_changer_tick, (sm_state_idx_t)sP1_MANUAL, P1a19, iP1a19, NULL, SM_GPOL_POSITIVE },
 };
 
 // sm_P1 state machine definition
@@ -183,9 +236,23 @@ static const sm_state_t P1_States[sP1_STATE_COUNT] = {
     { sP1_TEST_transitions, ARRAY_SIZE(sP1_TEST_transitions), NULL, NULL},
 };
 
+static void t_blink_changer_cb(void* arg)
+{
+    sm_machine_t* machine = (sm_machine_t*)arg; // let this callback know which machine is calling
 
-sm_machine_t sm_P1 = { 0 };
+    sm_post_event(ev_t_blink_changer_tick);
+}
+
 static P1_context_t P1_ctx = { .t_blink_changer = NULL };
+sm_machine_t sm_P1 = { .ctx = &P1_ctx,
+                       .s1 = sP1_START,
+                       .id = P1_ID,
+                       .flags = 0,
+                       .event = evNullEvent,
+                       .event_data = NULL,
+                       .states = P1_States,
+                       .sizes = ARRAY_SIZE(P1_States),
+                    };
 #if defined(CONFIG_SM_TRACER)
 static void sm_trace_machine_1 (sm_machine_t* machine, const sm_transition_t* tr);
 static void sm_lost_event_1(sm_machine_t* machine);
@@ -209,10 +276,23 @@ void P1_start(void)
 
     ESP_LOGI(TAG,"Starting P1");
 
+    P1_context_t* ctx = (P1_context_t*)(sm_P1.ctx);
+
     sm_initialize(&sm_P1, sP1_START, P1_ID, P1_States, ARRAY_SIZE(P1_States),&P1_ctx);
     sm_set_tracers(&sm_P1,sm_trace_machine_1, sm_trace_context, sm_lost_event_1);
     sm_trace_on(&sm_P1);
     sm_trace_lost_event_on(&sm_P1);
+
+    if (ctx->t_blink_changer == NULL) {
+        esp_timer_create_args_t tca = {
+            .callback = t_blink_changer_cb,
+            .arg = &sm_P1,      // pointer to the machine and the context
+            .dispatch_method = ESP_TIMER_TASK,
+            .name = "t_blink_changer"
+        };
+        ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_create(&tca,&ctx->t_blink_changer));
+    }
+
     sm_start_with_event(&sm_P1,sP1_START,evP1Start);
 }
 

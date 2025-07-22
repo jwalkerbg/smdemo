@@ -33,4 +33,11 @@ menu "Smart Air Application configuration"
         help
             This option defines the active level of the LED. Set to 0 for low active and 1 for high active.
 
+    config LED_BLINK_PERIOD_CHANGER_INTERVAL
+        int "LED blink period changer interval"
+        default 60000
+        range 2000 100000
+        help
+            This option defines the interval in milliseconds for changing the LED blink period.
+
 endmenu

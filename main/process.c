@@ -185,7 +185,7 @@ static const sm_state_t P1_States[sP1_STATE_COUNT] = {
 
 
 sm_machine_t sm_P1 = { 0 };
-static P1_context_t P1_ctx = { 0 };
+static P1_context_t P1_ctx = { .t_blink_changer = NULL };
 #if defined(CONFIG_SM_TRACER)
 static void sm_trace_machine_1 (sm_machine_t* machine, const sm_transition_t* tr);
 static void sm_lost_event_1(sm_machine_t* machine);

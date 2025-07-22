@@ -7,6 +7,7 @@ extern "C" {    // allow use with C++ compilers
 #endif
 
 #include "sdkconfig.h"
+#include "esp_timer.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -28,7 +29,7 @@ typedef enum sP1_states {
 } sP1_states_t;
 
 typedef struct {
-    uint16_t dummy;
+    esp_timer_handle_t t_blink_changer;  // Timer handle for periodic tasks
 } P1_context_t;
 
 void P1_start(void);

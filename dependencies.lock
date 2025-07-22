@@ -26,7 +26,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.4.1
+    version: 5.4.2
   state_machine:
     component_hash: e3e516786c3fb3abaae483567ec7599e86a45be0d88536222cef5a7be1f67ee1
     dependencies:

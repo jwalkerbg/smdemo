@@ -377,8 +377,8 @@ const char* const sP1_state_names[] = {
 
 static void SM_TraceMachine_ (sm_machine_t* machine, const sm_transition_t* tr, const char* const * state_names)
 {
-    ESP_LOGI(TAG,"ID=%04d, S1=%s, S2=%s, Event=%s, Action=%d %spermitted",
-        machine->id,state_names[machine->s1],state_names[tr->s2],event_names[tr->event],tr->actidx,(machine->flags & SM_TREN) == 0 ? "not " : "");
+    ESP_LOGI(TAG,"ID=%04d, S1=%s, S2=%s, Event=%s, Action=P%da%d %spermitted",
+        machine->id,state_names[machine->s1],state_names[tr->s2],event_names[tr->event],machine->id,tr->actidx,(machine->flags & SM_TREN) == 0 ? "not " : "");
 }
 
 static void sm_trace_machine_1 (sm_machine_t* machine, const sm_transition_t* tr)

@@ -29,6 +29,7 @@ typedef enum sP1_states {
 } sP1_states_t;
 
 typedef struct {
+    uint32_t op_mode_changes;
     esp_timer_handle_t t_blink_changer;  // Timer handle for periodic tasks
 } P1_context_t;
 

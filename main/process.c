@@ -115,16 +115,22 @@ static void P1a5(sm_machine_t* machine)
 static void P1a6(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a6 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(0);  // Set blink period to 10Hz
     set_opmode(OP_MODE_STANDBY);
+    ctx->op_mode_changes++;
     anvs_app_op_mode_set(OP_MODE_STANDBY);
 }
 
 static void P1a7(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a7 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(1);  // Set blink period to 2Hz
     set_opmode(OP_MODE_AUTO);
+    ctx->op_mode_changes++;
     anvs_app_op_mode_set(OP_MODE_AUTO);
 
 }
@@ -132,60 +138,84 @@ static void P1a7(sm_machine_t* machine)
 static void P1a8(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a8 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(2);  // Set blink period to 1Hz
     set_opmode(OP_MODE_AUTO_NIGHT);
+    ctx->op_mode_changes++;
     anvs_app_op_mode_set(OP_MODE_AUTO_NIGHT);
 }
 
 static void P1a9(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a9 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(3);  // Set blink period to 0.5Hz
     set_opmode(OP_MODE_MANUAL);
+    ctx->op_mode_changes++;
     anvs_app_op_mode_set(OP_MODE_MANUAL);
 }
 
 static void P1a10(sm_machine_t* machine)
 {
     ESP_LOGI(TAG,"P1a10 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(4);  // Set blink period to 0.4Hz
     set_opmode(OP_MODE_TEST);
+    ctx->op_mode_changes++;
     anvs_app_op_mode_set(OP_MODE_TEST);
 }
 
 static void P1a16(sm_machine_t* machine)
 {
-    ESP_LOGI(TAG,"P1a6 executed");
+    ESP_LOGI(TAG,"P1a16 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(0);  // Set blink period to 10Hz
     set_opmode(OP_MODE_STANDBY);
+    ctx->op_mode_changes++;
 }
 
 static void P1a17(sm_machine_t* machine)
 {
-    ESP_LOGI(TAG,"P1a7 executed");
+    ESP_LOGI(TAG,"P1a17 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(1);  // Set blink period to 2Hz
     set_opmode(OP_MODE_AUTO);
+    ctx->op_mode_changes++;
 }
 
 static void P1a18(sm_machine_t* machine)
 {
-    ESP_LOGI(TAG,"P1a8 executed");
+    ESP_LOGI(TAG,"P1a18 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(2);  // Set blink period to 1Hz
     set_opmode(OP_MODE_AUTO_NIGHT);
+    ctx->op_mode_changes++;
 }
 
 static void P1a19(sm_machine_t* machine)
 {
-    ESP_LOGI(TAG,"P1a9 executed");
+    ESP_LOGI(TAG,"P1a19 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(3);  // Set blink period to 0.5Hz
     set_opmode(OP_MODE_MANUAL);
+    ctx->op_mode_changes++;
 }
 
 static void P1a20(sm_machine_t* machine)
 {
-    ESP_LOGI(TAG,"P1a10 executed");
+    ESP_LOGI(TAG,"P1a20 executed");
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+
     set_blink_period(4);  // Set blink period to 0.4Hz
     set_opmode(OP_MODE_TEST);
+    ctx->op_mode_changes++;
 }
 
 static const sm_transition_t sP1_START_transitions[] = {
@@ -243,7 +273,7 @@ static void t_blink_changer_cb(void* arg)
     sm_post_event(ev_t_blink_changer_tick);
 }
 
-static P1_context_t P1_ctx = { .t_blink_changer = NULL };
+static P1_context_t P1_ctx = { .op_mode_changes = 0, .t_blink_changer = NULL };
 sm_machine_t sm_P1 = { .ctx = &P1_ctx,
                        .s1 = sP1_START,
                        .id = P1_ID,
@@ -378,7 +408,10 @@ static void sm_trace_machine_1 (sm_machine_t* machine, const sm_transition_t* tr
 
 void sm_trace_context(sm_machine_t* machine, bool when)
 {
-    ESP_LOGI(TAG,"Trace context %d",when);
+    P1_context_t* ctx = (P1_context_t*)(machine->ctx);
+    if (when == 1) {
+        ESP_LOGI(TAG,"Number of operative mode changes = %lu",ctx->op_mode_changes);
+    }
 }
 
 static void sm_lost_event_(sm_machine_t* machine, const char* const * state_names)

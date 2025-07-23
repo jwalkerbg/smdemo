@@ -1,5 +1,5 @@
 dependencies:
   espressif/button: =4.1.3
   state_machine:
-    git: http://gitea.imc.bg:3010/imc/state_machine.git
-    version: 2.1.2
+    git: https://github.com/jwalkerbg/state_machine.git
+    version: 2.1.3

@@ -28,18 +28,18 @@ dependencies:
       type: idf
     version: 5.4.2
   state_machine:
-    component_hash: e3e516786c3fb3abaae483567ec7599e86a45be0d88536222cef5a7be1f67ee1
+    component_hash: 5c625d38cc21639fba4226f836521f8a3499481b42b22f9f3b8f909e7a332cc0
     dependencies:
     - name: idf
       version: '>=5.4'
     source:
-      git: http://gitea.imc.bg:3010/imc/state_machine.git
+      git: https://github.com/jwalkerbg/state_machine.git
       path: .
       type: git
-    version: 2ded52c7e249821b5384d07625e8a5a8add1b06b
+    version: 6230064c9e4997b930c73d6fa8cac763c891f1f4
 direct_dependencies:
 - espressif/button
 - state_machine
-manifest_hash: 1f518033ed7bd8c2ac86d947abfc7d28c256791f8635d591adc79214c4e4f87d
+manifest_hash: fa99c164f8467d5f3e49209543dc28712af11c6d98346615fdac3013800c1d77
 target: esp32s3
 version: 2.0.0

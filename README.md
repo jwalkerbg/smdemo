@@ -137,3 +137,9 @@ Please see the graphic diagram to take shape of the logic.
 ## Future exercises
 
 Add second button, par example on GPIO14. Add a callback function that reacts to its Single clock event. Add new FSM event to the `EVENT_LIST` for that button event. Then add transitions in the FSM data to rotate the operative states in opposite direction.
+
+## Graphic presentation of the logic of FSM
+
+![P1-1: Initialization & state transitions triggered by the button](./images/diagrams-P1-1.drawio.png)
+
+![P1-2: State transitions triggered by the timer](./images/diagrams-P1-2.drawio.png)
